@@ -31,12 +31,10 @@ namespace SCRIPT{
 }
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
     bool isNode = is_node->data;
-
     if(isNode != isNodeLast && isNode){
         onNode = true;
         // ROS_INFO("(%.1lf, %.1lf, %.1lf) faceTo: %d",odometry.x, odometry.y, odometry.theta, orientation.data);
     }
-
     isNodeLast = isNode;
 }
 void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
@@ -46,7 +44,7 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
-    ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
+    // ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
 }
 
 int main(int argc, char **argv){
@@ -98,9 +96,8 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         ros::spinOnce();
 
         if(onNode){
-            int odomState = MAP::check_onNode(nodeToGo);
-            nodeLoseConp = 0;
-            if(odomState == 0){
+            // nodeLoseConp = 0;
+            if(MAP::check_onNode(nodeToGo) == 0){
                 ROS_INFO("Node misjudgment!!");
                 onNode = false;
                 continue;
@@ -131,41 +128,40 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
                 // orientation.data = 6;
             }
             MAP::eraseEdge(nodeToGo, nodeNow);
-            onNode = false;            
+            onNode = false;
 
-            ROS_INFO("On %d, -> %d",nodeNow,nodeToGo);
-            ROS_INFO("go ahead: %d",orientation.data);
-            cout<<endl;
+            ROS_INFO("On %d, -> %d ; go ahead: %d",nodeNow,nodeToGo,orientation.data);
+
         }
         
         // if(MAP::disToOdom(nodeToGo) < decelerationZone)    orientation.data = -2;
 
-        if(nodeNow != -1){
-            double ux = MAP::node[nodeToGo].second.first;
-            double uy = MAP::node[nodeToGo].second.second;
-            double vx = MAP::node[MAP::nodeNow].second.first;
-            double vy = MAP::node[MAP::nodeNow].second.second;
-            double x_diff = fabs(ux - vx);
-            double y_diff = fabs(uy - vy);
-            if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
-                orientation.data = -2;
-        }else{
-            double ux = MAP::node[0].second.first;
-            double uy = MAP::node[0].second.second;
-            double vx = 60;
-            double vy = 180;
-            double x_diff = fabs(ux - vx);
-            double y_diff = fabs(uy - vy);
-            if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
-                orientation.data = -2;
-        }
+        if(ODOM::slow(nodeToGo))     orientation.data = -2;
+        // if(nodeNow != -1){
+        //     double ux = MAP::node[nodeToGo].second.first;
+        //     double uy = MAP::node[nodeToGo].second.second;
+        //     double vx = MAP::node[MAP::nodeNow].second.first;
+        //     double vy = MAP::node[MAP::nodeNow].second.second;
+        //     double x_diff = fabs(ux - vx);
+        //     double y_diff = fabs(uy - vy);
+        //     if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
+        //         orientation.data = -2;
+        // }else{
+        //     double ux = MAP::node[0].second.first;
+        //     double uy = MAP::node[0].second.second;
+        //     double vx = 60;
+        //     double vy = 180;
+        //     double x_diff = fabs(ux - vx);
+        //     double y_diff = fabs(uy - vy);
+        //     if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
+        //         orientation.data = -2;
+        // }
+        orientation_pub.publish(orientation);
         if(MAP::check_onNode(nodeToGo) == 2){
             nodeLoseConp = 1;
             // ROS_INFO("nodeLoseConp");
         }else   nodeLoseConp = 0;
         
-
-        orientation_pub.publish(orientation);
         if(nodeLoseConp){            
             std_msgs::Bool ONE;
             ONE.data = 1;
@@ -183,7 +179,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             cam_mode.data = 0;
         }
 
-        // ROS_INFO("On %d, -> %d",nodeNow,nodeToGo);
+        // ROS_INFO("On %d, -> %d ; go ahead: %d",nodeNow,nodeToGo,orientation.data);
         // ROS_INFO("go ahead: %d",orientation.data);
 
         rate.sleep();

@@ -155,7 +155,7 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(run src/run.cpp src/map.cpp src/cam.cpp src/odom.cpp)
+add_executable(run src/run.cpp lib/map.cpp lib/cam.cpp lib/odom.cpp)
 target_link_libraries(run ${catkin_LIBRARIES} yaml-cpp)
 add_dependencies(run ${catkin_EXPORTED_TARGETS})
 

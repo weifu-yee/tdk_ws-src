@@ -24,6 +24,7 @@ namespace ODOM{
     extern Odometry odometry;
     extern int oriNow;
     extern int faceTo;
+    bool slow(int nodeToGo);
 }
 using namespace ODOM;
 

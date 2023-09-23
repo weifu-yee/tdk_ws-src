@@ -4,9 +4,10 @@
         "name": "Win32",
         "includePath": [
           "${workspaceFolder}",
-          "/home/ditrobotics/tdk_a15_ws/src/main_func/include/main_func",
-          "/home/ditrobotics/tdk_a15_ws/src/main_func/src",
-          "/home/ditrobotics/tdk_a15_ws/src/tutorial/src",
+          "/home/ditrobotics/tdk_ws/src/main_func/include/main_func",
+          "/home/ditrobotics/tdk_ws/src/main_func/src",
+          "/home/ditrobotics/tdk_ws/src/main_func/lib",
+          "/home/ditrobotics/tdk_ws/src/tutorial/src",
           "/opt/ros/noetic/include"
         ],
         "defines": [],
