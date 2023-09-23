@@ -91,6 +91,7 @@ int main(int argc, char **argv){
 void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ros::Rate rate(20);
     
+    ROS_INFO("On -1, -> 0 ; go ahead: 0");
     while(nh.ok() && MAP::nodeNow < 12){
         cam_pub.publish(cam_mode);
         ros::spinOnce();

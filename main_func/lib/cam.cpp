@@ -1,4 +1,5 @@
 #include "cam.h"
+#include "odom.h"
 set<int> CAM::numbers;
 
 double secondCapt = 300;
@@ -52,8 +53,11 @@ void CAM::what_to_erase(int a, int b){
     };
     eraseBox(a);
     eraseBox(b);
+    auto secondColumn = [&](){
+        return (ODOM::odometry.y > (49 + 139)/2 && ODOM::odometry.y < (139 + 229)/2);
+    };
     if(a == 1 && b == 3)    MAP::eraseEdge(2, 3);
     if(a == 2 && b == 3)    MAP::eraseEdge(0, 2);
-    if(a == 5 && b == 6 && MAP::nodeNow == 5)    MAP::eraseEdge(5, 6);
-    if(a == 8 && b == 9 && MAP::nodeNow == 8)    MAP::eraseEdge(8, 9);
+    if(a == 5 && b == 6 && secondColumn())    MAP::eraseEdge(5, 6);
+    if(a == 8 && b == 9 && secondColumn())    MAP::eraseEdge(8, 9);
 }
