@@ -1,0 +1,6 @@
+<launch>
+    <include file = "$(find tutorial)/launch/test.launch" />
+    <include file = "$(find main_func)/launch/run.launch" />
+    <node name="cam" pkg="tutorial" type="cam" output="screen">
+    </node>
+</launch>

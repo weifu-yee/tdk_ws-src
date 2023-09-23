@@ -1,0 +1,34 @@
+# constant
+span: 0.1
+phy_maxMS: 46
+slowMS: 15
+
+# soft
+softRate: 0.7
+
+# tracker param
+black: 0
+nonblack: 1
+
+# deceleration
+deceleration_coeff: 0.8
+deceleration_minSpeed: 5
+
+# variable
+# cmd_vel
+ori: -1
+
+V: 46
+vel_limit: 50
+
+# transmission fix
+
+vkp: 10.0
+vki: 0.0
+vkd: 0.0
+
+# rotation fix
+
+wkp: 2.0
+wki: 0.0
+wkd: 0.0
