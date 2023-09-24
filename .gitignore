@@ -1,2 +1,2 @@
-CMakeList.txt
-.vscode/
+/CMakeList.txt
+.vscode
