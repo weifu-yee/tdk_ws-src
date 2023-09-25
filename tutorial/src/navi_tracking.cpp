@@ -232,6 +232,8 @@ int main(int argc, char** argv) {
 
             double VX = V*cos(((double)ori)*0.5*pi) - u_d*sin(((double)ori)*0.5*pi);
             double VY = V*sin(((double)ori)*0.5*pi) + u_d*cos(((double)ori)*0.5*pi);
+
+//
             if(!PID_mode){
                 u_d = node_overshoot_logic();
                 u_theta = 0;
@@ -239,6 +241,8 @@ int main(int argc, char** argv) {
                 VY = u_d*cos(((double)ori)*0.5*pi);
                 // ROS_INFO("overshoot: prev_ori = %d , ori = %d; u_d: %.3lf, VX: %.3lf, VY: %.3lf",prev_ori,ori,u_d,VX,VY);
             }
+//
+
             double W = u_theta;
             auto motorSpeed = [&](int i){
                 if(i == 0)  return VX + VY + W*0.5*(width + length);
