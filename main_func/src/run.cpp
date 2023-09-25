@@ -92,7 +92,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ros::Rate rate(20);
     
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
-    while(nh.ok() && MAP::nodeNow < 13){
+    while(nh.ok() && MAP::nodeNow < 12){
         cam_pub.publish(cam_mode);
         ros::spinOnce();
 
@@ -123,11 +123,12 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             nodeToGo = max;
 
             ODOM::oriNow = orientation.data = MAP::cmd_ori(nodeToGo, nodeNow);
-            if(nodeNow == 1 && nodeToGo == 4
-            || nodeNow == 2 && nodeToGo == 5
-            || nodeNow == 3 && nodeToGo == 6){
-                orientation.data = 6;
-            }
+            // if(nodeNow == 1 && nodeToGo == 4
+            // || nodeNow == 2 && nodeToGo == 5
+            // || nodeNow == 3 && nodeToGo == 6){
+            //     orientation.data = 6;
+            // }
+
             MAP::eraseEdge(nodeToGo, nodeNow);
             onNode = false;
 
@@ -157,6 +158,10 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         //     if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
         //         orientation.data = -2;
         // }
+        if(odometry.x >= 160 && odometry.x <= 210){
+            orientation.data = 6;
+            odometry.x == 160 + 50;
+        }
         orientation_pub.publish(orientation);
         if(MAP::check_onNode(nodeToGo) == 2){
             nodeLoseConp = 1;

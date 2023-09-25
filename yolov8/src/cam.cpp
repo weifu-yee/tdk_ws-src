@@ -13,8 +13,6 @@ ros::Subscriber cam_sub;
 ros::Publisher detect_pub;
 VideoCapture cap;
 
-int idx=0;
-
 bool openCam(){
     cap.open(0, CAP_V4L2);
     if (cap.isOpened()) {
@@ -40,9 +38,9 @@ bool closeCam(){
 bool detect(){
     // add number on file name
     std::ostringstream img_path_stream;
-    img_path_stream << "/home/ditrobotics/tdk_ws/src/tutorial/src/capture_" << idx << ".jpg";
+    img_path_stream << "/home/ditrobotics/tdk_ws/src/tutorial/src/capture.jpg";
     std::string img_path = img_path_stream.str();
-    idx++;
+    // idx++;
 
     Mat frame;
     cap >> frame; 

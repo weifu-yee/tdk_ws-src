@@ -18,7 +18,7 @@ class Detector:
 
     def detect_img(self):
         print("[YOLO] start inference ...")
-        img_path = f"/home/ditrobotics/tdk_ws/src/yolov8/src/capture_{self.count}.jpg"
+        img_path = f"/home/ditrobotics/tdk_ws/src/yolov8/src/capture.jpg"
         results = self.model.predict(source=img_path, save=True)
 
         # Get detected class name
@@ -39,5 +39,5 @@ def main():
     detector = Detector()
     rospy.spin()  # Keep the node running until it's shut down
 
-if __name__ == '__main__':
+if name == 'main':
     main()
