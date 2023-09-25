@@ -80,7 +80,7 @@ int main(int argc, char **argv){
     ROS_INFO("pass 1st Level!!");
 
     while(nh.ok()){
-        orientation.data = -1;
+        orientation.data = 7;
         orientation_pub.publish(orientation);
         cam_mode.data = 2;
         cam_pub.publish(cam_mode);
@@ -92,7 +92,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ros::Rate rate(20);
     
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
-    while(nh.ok() && MAP::nodeNow < 12){
+    while(nh.ok() && MAP::nodeNow < 13){
         cam_pub.publish(cam_mode);
         ros::spinOnce();
 
@@ -126,7 +126,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             if(nodeNow == 1 && nodeToGo == 4
             || nodeNow == 2 && nodeToGo == 5
             || nodeNow == 3 && nodeToGo == 6){
-                // orientation.data = 6;
+                orientation.data = 6;
             }
             MAP::eraseEdge(nodeToGo, nodeNow);
             onNode = false;

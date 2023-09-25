@@ -1,18 +1,19 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(tutorial)
+project(yolov8)
 
-## Compile as C1, supported in ROS Kinetic and newer
+set(OpenCV_DIR /usr/lib/aarch64-linux-gnu/cmake/opencv4)
+## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
   roscpp
   rospy
   std_msgs
-  tf
-  nav_msgs
+  OpenCV REQUIRED
 )
 
 ## System dependencies are found with CMake's conventions
@@ -72,7 +73,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   gemetry_msgs#   std_msgs
 # )
 
 ################################################
@@ -106,8 +107,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES tutorial
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  LIBRARIES yolov8
+#  CATKIN_DEPENDS gemetry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -125,7 +126,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/tutorial.cpp
+#   src/${PROJECT_NAME}/yolov8.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -136,7 +137,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/tutorial_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/yolov8_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -148,20 +149,13 @@ include_directories(
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(cam src/cam.cpp)
+target_link_libraries(cam ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-
-add_executable(debug src/debug.cpp)
-target_link_libraries(debug ${catkin_LIBRARIES})
-
-add_executable(navi_tracking src/navi_tracking.cpp)
-target_link_libraries(navi_tracking ${catkin_LIBRARIES})
-
-add_executable(comm_vel src/comm_vel.cpp)
-target_link_libraries(comm_vel ${catkin_LIBRARIES})
-
 
 #############
 ## Install ##
@@ -210,7 +204,7 @@ target_link_libraries(comm_vel ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_tutorial.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_yolov8.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

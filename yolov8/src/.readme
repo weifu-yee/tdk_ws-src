@@ -1,8 +1,10 @@
 # tutorial opencv8 使用說明
 ## A. 對外接口
 ### A-1. 關於此節點：
+* launch cam.cpp 以及 detect.py 
 * subcriber：topic 為 /mode，訊息格式為 std_msgs/Int32。
 * publisher：topic 為 /numbers，訊息格式為 std_msgs/Int32MultiArray。
+
 
 ### A-2. 關於 mode (cam.cpp)
 只接收 1、2 及 3：
@@ -21,10 +23,10 @@
 ### B-1. 關於程式架構
 * cam.cpp 處理 mode 邏輯，需要辨識時會透過 system() 去呼叫 detect.py。
 * detect.py 被呼叫時生成節點，結束辨識並 publish 資訊後結束生命。
-* 相機拍照畫面存在 tutorial/src/capture.jpg。
+* 相機拍照畫面存在 tutorial/src/capture_{idx}.jpg。
 
 ### B-2. 潛在/已知問題
-* 辨識時間很久，需要 23 秒。
+* 辨識時間很久，需要 23 秒。(已解決，目前 5 秒)
 * 相機拍照亮度十分不穩定。
 * 相機越早開越好。
 
