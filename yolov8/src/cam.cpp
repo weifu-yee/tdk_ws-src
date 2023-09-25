@@ -12,6 +12,7 @@ using namespace cv;
 ros::Subscriber cam_sub;
 ros::Publisher detect_pub;
 VideoCapture cap;
+std_msgs::Bool detect_msg;
 
 bool openCam(){
     cap.open(0, CAP_V4L2);
@@ -38,7 +39,7 @@ bool closeCam(){
 bool detect(){
     // add number on file name
     std::ostringstream img_path_stream;
-    img_path_stream << "/home/ditrobotics/tdk_ws/src/tutorial/src/capture.jpg";
+    img_path_stream << "/home/ditrobotics/tdk_ws/src/yolov8/jpg/capture.jpg";
     std::string img_path = img_path_stream.str();
     // idx++;
 
@@ -49,9 +50,12 @@ bool detect(){
     else ROS_ERROR("[3] Failed to save the image. Retrying...");
     
     // call detect.py
-    std_msgs::Bool detect_msg;
     detect_msg.data = true;
-    detect_pub.publish(detect_msg);
+    ros::Rate rate(20);
+    for(int i = 1; i <= 20; i++){
+        detect_pub.publish(detect_msg);
+        rate.sleep();
+    }
     
     // ROS_INFO("[3] Detect Finish.");
     return success;
