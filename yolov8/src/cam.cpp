@@ -16,7 +16,7 @@ VideoCapture cap;
 bool openCam(){
     cap.open(0, CAP_V4L2);
     if (cap.isOpened()) {
-        ROS_INFO("[1] Camera opened.");
+        // ROS_INFO("[1] Camera opened.");
         return true;
     } else {
         ROS_ERROR("[1] Could not open the camera. Retrying...");
@@ -27,7 +27,7 @@ bool openCam(){
 bool closeCam(){
     if (cap.isOpened()) {
         cap.release();
-        ROS_INFO("[2] Camera closed.");
+        // ROS_INFO("[2] Camera closed.");
         return true;
     } else {
         ROS_ERROR("[2] Could not close the camera. Retrying...");
@@ -45,7 +45,7 @@ bool detect(){
     Mat frame;
     cap >> frame; 
     bool success = cv::imwrite(img_path, frame);  // Save the image
-    if (success) ROS_INFO("[3] Image captured and saved.");
+    if (success); //ROS_INFO("[3] Image captured and saved.");
     else ROS_ERROR("[3] Failed to save the image. Retrying...");
     
     // call detect.py
@@ -53,7 +53,7 @@ bool detect(){
     detect_msg.data = true;
     detect_pub.publish(detect_msg);
     
-    ROS_INFO("[3] Detect Finish.");
+    // ROS_INFO("[3] Detect Finish.");
     return success;
 }
 
