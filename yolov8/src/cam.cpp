@@ -31,7 +31,7 @@ bool closeCam(){
         // ROS_INFO("[2] Camera closed.");
         return true;
     } else {
-        ROS_ERROR("[2] Could not close the camera. Retrying...");
+        // ROS_ERROR("[2] Could not close the camera. Retrying...");
         return false;
     }
 }

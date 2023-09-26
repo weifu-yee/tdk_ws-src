@@ -8,12 +8,14 @@
 #include <utility>
 #include <set>
 #include <cmath>
+#include <stdbool.h>
 #include "ros/ros.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int8.h"
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int64.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "geometry_msgs/Twist.h"
 
 #define buildNodeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/buildNode.yaml"
 #define initBuildEdgeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/initBuildEdge.yaml"

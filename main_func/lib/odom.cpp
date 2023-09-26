@@ -12,7 +12,8 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
         x += ins_vel->linear.x * (dt);
     if(ODOM::oriNow % 2 == 1)
         y += ins_vel->linear.y * (dt);
-    theta += ins_vel->angular.z * (dt);
+    if(ODOM::oriNow == 4 || ODOM::oriNow == 5)
+        theta += ins_vel->angular.z * (dt);
     while(theta > PI)  theta -= 2*PI;        
     while(theta < -PI) theta += 2*PI;
     last_time = current_time;

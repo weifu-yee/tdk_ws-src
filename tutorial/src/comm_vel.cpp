@@ -83,6 +83,18 @@ int main(int argc, char **argv)
             vel.angular.z = 0;
             pub.publish(vel);
         }
+        else if(ori == 4){
+            vel.linear.x = 0;
+            vel.linear.y = 0;
+            vel.angular.z = 1;
+            pub.publish(vel);
+        }
+        else if(ori == 5){
+            vel.linear.x = 0;
+            vel.linear.y = 0;
+            vel.angular.z = -1;
+            pub.publish(vel);
+        }
         else if(ori == 6){
 
         }

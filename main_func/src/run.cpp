@@ -12,6 +12,7 @@ bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 
 ros::Publisher orientation_pub;
+ros::Publisher cmd_vel_pub;
 ros::Subscriber node_sub;
 ros::Publisher cam_pub;
 ros::Subscriber number_sub;
@@ -22,6 +23,7 @@ ros::Publisher laji_pub;
 std_msgs::Int8 orientation;
 std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
+geometry_msgs::Twist rotate_ang;
 
 namespace SCRIPT{
     void firstLevel(ros::NodeHandle& nh);
@@ -44,13 +46,14 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
-    // ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
+    ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
 }
 
 int main(int argc, char **argv){
     ros::init(argc, argv, "main_func");
     ros::NodeHandle nh;
     orientation_pub = nh.advertise<std_msgs::Int8>("/cmd_ori", 1);
+    cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     node_sub = nh.subscribe("/node_detect",1,nodeCallback);
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
     number_sub = nh.subscribe("/numbers",1,numberCallback);
@@ -70,6 +73,7 @@ int main(int argc, char **argv){
     orientation.data = 0;   //front
     cam_mode.data = 1;
 
+    /*
     // ROS_INFO("On %d, -> %d",nodeNow,nodeToGo);
     // ROS_INFO("(%lf, %lf, %lf)",odometry.x, odometry.y, odometry.theta);
     // ROS_INFO("go ahead: %d",orientation.data);
@@ -81,16 +85,38 @@ int main(int argc, char **argv){
     // odometry.x = 140;       //
     // nodeToGo = 4;           //    
 
-
+    */
     SCRIPT::firstLevel(nh);
     ROS_INFO("pass 1st Level!!");
 
-    while(nh.ok()){
-        orientation.data = 7;
+    ros::Rate rate(20);
+    while(nh.ok() && odometry.theta < 90){
+        //逆時針轉90度
+        ros::spinOnce();
+        ODOM::oriNow = orientation.data = 4;
+        // rotate_ang.angular.z = 1;
+        // cmd_vel_pub.publish(rotate_ang);
         orientation_pub.publish(orientation);
-        cam_mode.data = 2;
-        cam_pub.publish(cam_mode);
+        rate.sleep();
     }
+    while(nh.ok() && odometry.theta < 90){
+        //逆時針轉90度
+        ros::spinOnce();
+        ODOM::oriNow = orientation.data = 4;
+        // rotate_ang.angular.z = 1;
+        // cmd_vel_pub.publish(rotate_ang);
+        orientation_pub.publish(orientation);
+        rate.sleep();
+    }
+    int cmdori_7_times = 0;
+    while(nh.ok()){
+        if(cmdori_7_times < 40){
+            orientation.data = 7;
+        }
+        else    orientation.data = -1;
+        orientation_pub.publish(orientation);
+    }
+    
     return 0;
 }
 
@@ -145,17 +171,20 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         // if(MAP::disToOdom(nodeToGo) < decelerationZone)    orientation.data = -2;
 
         if(ODOM::slow(nodeToGo))     orientation.data = -2;
-        if(odometry.x >= 140 + 27 && cmdori_6_times < 200){
+        if(odometry.x >= 140 + 10 && cmdori_6_times < 600){
             orientation.data = 6;
-            odometry.x == 319.5;
             cmdori_6_times++;
-        }else if(cmdori_6_times == 200){
+        }else if(cmdori_6_times == 600){
             orientation.data = 0;
             cmdori_6_times++;
+            odometry.x = 330;
         }
+
         orientation_pub.publish(orientation);
         if(MAP::check_onNode(nodeToGo) == 2){
-            nodeLoseConp = 1;
+            if(nodeToGo - nodeNow == 3 && nodeToGo > 3 && nodeToGo < 7)
+                ROS_INFO("no conp");
+            else nodeLoseConp = 1;
             // ROS_INFO("nodeLoseConp");
         }else   nodeLoseConp = 0;
         
@@ -170,20 +199,19 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             CAM::capture_n_detect(4, cam_pub, orientation_pub, nh);
             capt_ed_times++;
         }
-        if(odometry.x >= thirdCapt && capt_ed_times == 2){
+        else if(odometry.x >= thirdCapt && nodeNow > 3 && capt_ed_times == 2){
             CAM::capture_n_detect(7, cam_pub, orientation_pub, nh);
             capt_ed_times++;
-            cam_mode.data = 0;
+            cam_mode.data = 2;
         }
+        // else if(odometry.x >= 500 && capt_ed_times == 3){
+        //     cam_mode.data = 2;
+        //     capt_ed_times++;
+        // }
 
         // ROS_INFO("On %d, -> %d ; go ahead: %d",nodeNow,nodeToGo,orientation.data);
         // ROS_INFO("go ahead: %d",orientation.data);
 
-        rate.sleep();
-    }
-    while(nh.ok() && odometry.theta < 90){
-        //逆時針轉90度
-        ros::spinOnce();
         rate.sleep();
     }
 }

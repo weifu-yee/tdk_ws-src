@@ -15,7 +15,7 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
     ROS_INFO("cease!!");
 
     ros::Rate rate(20); //20Hz
-    bool flag = 0;
+    int flag = 0;
     int _a = 0, _b = 0;
     do{     //the capture and detect process
         ros::spinOnce();
@@ -23,20 +23,22 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
         orientation_pub.publish(cease);
         int a = 0, b = 0;
         for(int i = op; i <= op + 2; i++){
-            if(numbers.find(i) != numbers.end())
-            if(!a){
-                a = i;      flag = 0;
-            }
-            else if(!b){
-                b = i;
-                flag = 1;
-            }
-            else{
-                flag = 0;   
-                CAM::numbers.clear();
+            if(numbers.find(i) != numbers.end()){
+                if(!a){
+                    a = i;      flag = 0;
+                }
+                else if(!b){
+                    b = i;
+                    flag = 1;
+                }
+                else{
+                    flag = 0;   
+                    CAM::numbers.clear();
+                }
             }
         }
         _a = a;     _b = b;
+        // ROS_INFO("flag = %d",flag);
         rate.sleep();
     }while(!flag && nh.ok());
     what_to_erase(_a, _b);
