@@ -81,16 +81,16 @@ int main(int argc, char **argv){
     // SCRIPT::testLine(nh);
 
 
-    // MAP::nodeNow = 1;       //
-    // odometry.x = 140;       //
-    // nodeToGo = 4;           //    
-
     */
+    // MAP::nodeNow = 4;       //
+    // odometry.x = 330;       //
+    // nodeToGo = 7;           //    
+
     SCRIPT::firstLevel(nh);
     ROS_INFO("pass 1st Level!!");
 
     ros::Rate rate(20);
-    while(nh.ok() && odometry.theta < 90){
+    while(nh.ok() && odometry.theta < PI/2){
         //逆時針轉90度
         ros::spinOnce();
         ODOM::oriNow = orientation.data = 4;
@@ -124,6 +124,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ros::Rate rate(20);
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
     int cmdori_6_times = 0;
+    // int cmdori_6_times = 800;   //
     while(nh.ok() && MAP::nodeNow < 12){
         cam_pub.publish(cam_mode);
         ros::spinOnce();
