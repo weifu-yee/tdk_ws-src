@@ -16,12 +16,13 @@ bool rotate_ed = 0;
 
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
-ros::Subscriber node_sub;
 ros::Publisher cam_pub;
-ros::Subscriber number_sub;
-ros::Subscriber odom_sub;
 ros::Publisher node_detect_pub;
 ros::Publisher laji_pub;
+
+ros::Subscriber node_sub;
+ros::Subscriber number_sub;
+ros::Subscriber odom_sub;
 
 std_msgs::Int8 orientation;
 std_msgs::Int8 cmd_vel;
@@ -98,8 +99,9 @@ int main(int argc, char **argv){
 
     SCRIPT::firstLevel(nh);
     ROS_INFO("pass 1st Level!!");
+    SCRIPT::binBaiYa(nh);
 
-    //往左走65cm
+    //往左走45cm
     
 
     // int cmdori_7_times = 0;
@@ -135,10 +137,11 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             }
             rotate_ed = 1;
             ODOM::oriNow = orientation.data = 0;
+            ODOM::faceTo ++;
             ROS_INFO("rotate_done!!");
         }
         //第二重製區偏移
-        while(rotate_ed && nodeNow == 12 && odometry.y >= 330 && odometry.y < 370){
+        while(rotate_ed && odometry.y >= 330 && odometry.y < 370){
             ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
             if(odometry.x < 710)    cmd_vel.linear.x = 15;
             else    cmd_vel.linear.x = 0;
@@ -186,7 +189,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
                 return;
             }
             nodeToGo = max;
-            //發布要去的node
+            //發布方向
             ODOM::oriNow = orientation.data = MAP::cmd_ori(nodeToGo, nodeNow);
             MAP::eraseEdge(nodeToGo, nodeNow);
             onNode = false;
@@ -248,9 +251,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
 void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     ros::Rate rate(20);
     ROS_INFO("binBaiYa");
-    int cmdori_6_times = 0;
-    bool secRESET = false;
-    // while(nh.ok() && MAP::nodeNow < 13){
+    nodeNow = 12;   nodeToGo = 13;
     while(nh.ok() && nodeToGo == 14){
         ros::spinOnce();
         //在node上
@@ -260,11 +261,6 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
                 ROS_INFO("Node misjudgment!!");
                 onNode = false;
                 continue;
-            }
-            //第一次辨識
-            if(nodeNow == -1){
-                CAM::capture_n_detect(1, cam_pub, orientation_pub, nh);
-                capt_ed_times ++;
             }
             //更新現在的node
             nodeNow = nodeToGo;
@@ -288,7 +284,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
 
         }
 
-        if(nodeNow == 16){            
+        if(nodeNow == 16){
             int cmdori_7_times = 0;
             while(nh.ok() && cmdori_7_times < time_7*20){
                 if(cmdori_7_times < 40){
@@ -297,6 +293,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
                 else    orientation.data = -1;
                 orientation_pub.publish(orientation);
             }
+            onNode = true;
         }
 
         //靠近node時減速

@@ -63,15 +63,18 @@ void MAP::eraseEdge(int u, int v){
 }
 int MAP::cmd_ori(int u, int v){
     if(v == -1)  return 0;
+    if(u == 13 && v == 12)  return 0;
     double ux = MAP::node[u].second.first;
     double uy = MAP::node[u].second.second;
     double vx = MAP::node[v].second.first;
     double vy = MAP::node[v].second.second;
-    if(ux > vx)     return 0;
-    if(uy > vy)     return 1;
-    if(ux < vx)     return 2;
-    if(uy < vy)     return 3;
-    return -1;
+    int ori;
+    if(ux > vx)     ori = 0;
+    else if(uy > vy)     ori = 1;
+    else if(ux < vx)     ori = 2;
+    else if(uy < vy)     ori = 3;
+    else   return -1;
+    return (ori + 4 - ODOM::faceTo) % 4;
 }
 int MAP::disToOdom(int u){
     double ux, uy;
