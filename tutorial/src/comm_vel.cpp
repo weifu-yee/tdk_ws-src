@@ -107,6 +107,9 @@ int main(int argc, char **argv)
         else if(ori == 8){
 
         }
+        else if(ori == 10){
+
+        }
         else if(ori >= 0 && ori < 4 || ori == -2){
             pub.publish(vel);
         }

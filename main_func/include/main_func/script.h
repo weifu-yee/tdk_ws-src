@@ -4,7 +4,10 @@
 #include "map.h"
 
 namespace SCRIPT{
-    void dustBox();
+    void firstLevel(ros::NodeHandle& nh);
+    void binBaiYa(ros::NodeHandle& nh);
+    void dustBox(ros::NodeHandle& nh);
+    void testLine(ros::NodeHandle& nh);
 }
 using namespace SCRIPT;
 

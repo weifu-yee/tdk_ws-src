@@ -4,6 +4,8 @@
 using namespace std;
 using namespace MAP;
 
+#define time_7 15
+
 bool isNodeLast = false;
 bool onNode = false;
 int nodeToGo;
@@ -22,6 +24,7 @@ ros::Publisher node_detect_pub;
 ros::Publisher laji_pub;
 
 std_msgs::Int8 orientation;
+std_msgs::Int8 cmd_vel;
 std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
 geometry_msgs::Twist rotate_ang;
@@ -98,15 +101,15 @@ int main(int argc, char **argv){
 
     //往左走65cm
     
-    ROS_INFO("rotate_done!!");
-    int cmdori_7_times = 0;
-    while(nh.ok()){
-        if(cmdori_7_times < 40){
-            orientation.data = 7;
-        }
-        else    orientation.data = -1;
-        orientation_pub.publish(orientation);
-    }
+
+    // int cmdori_7_times = 0;
+    // while(nh.ok()){
+    //     if(cmdori_7_times < 40){
+    //         orientation.data = 7;
+    //     }
+    //     else    orientation.data = -1;
+    //     orientation_pub.publish(orientation);
+    // }
     
     return 0;
 }
@@ -115,7 +118,9 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ros::Rate rate(20);
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
     int cmdori_6_times = 0;
-    while(nh.ok() && MAP::nodeNow < 13){
+    bool secRESET = false;
+    // while(nh.ok() && MAP::nodeNow < 13){
+    while(nh.ok() && !secRESET){
         cam_pub.publish(cam_mode);
         ros::spinOnce();
 
@@ -130,8 +135,30 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             }
             rotate_ed = 1;
             ODOM::oriNow = orientation.data = 0;
-            ROS_INFO("rotate_ed");
+            ROS_INFO("rotate_done!!");
         }
+        //第二重製區偏移
+        while(rotate_ed && nodeNow == 12 && odometry.y >= 330 && odometry.y < 370){
+            ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+            if(odometry.x < 710)    cmd_vel.linear.x = 15;
+            else    cmd_vel.linear.x = 0;
+            if(odometry.y < 370)    cmd_vel.linear.y = 15;
+            else    cmd_vel.linear.y = 0;
+
+            if(odometry.x >= 710 && odometry.y >= 370){
+                odometry.x = 710;
+                odometry.y = 370;
+                secRESET = true;
+                ROS_INFO("secRESET!!");
+                break;
+            }
+
+            orientation_pub.publish(orientation);
+            cmd_vel_pub.publish(cmd_vel);
+            ROS_INFO("shifting");
+            rate.sleep();
+        }
+        
         
         //在node上
         if(onNode){
@@ -168,7 +195,10 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
 
         }
 
+        //靠近node時減速
         if(ODOM::slow(nodeToGo))     orientation.data = -2;
+
+        //跨坎劇本
         if(odometry.x >= 140 + 20 && cmdori_6_times < 600){
             orientation.data = 6;
             cmdori_6_times++;
@@ -180,26 +210,26 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             cmdori_6_times++;
             odometry.x = 300;
         }
-
         orientation_pub.publish(orientation);
+
+        //節點補償
         if(MAP::check_onNode(nodeToGo) == 2){
             if(nodeToGo - nodeNow == 3 && nodeToGo > 3 && nodeToGo < 7)
                 ROS_INFO("no conp");
             else nodeLoseConp = 1;
             // ROS_INFO("nodeLoseConp");
         }else   nodeLoseConp = 0;
-        
         if(nodeLoseConp){            
             std_msgs::Bool ONE;
             ONE.data = 1;
             node_detect_pub.publish(ONE);
         }
 
-
+        //第二次辨識
         if(odometry.x >= secondCapt && capt_ed_times == 1){
             CAM::capture_n_detect(4, cam_pub, orientation_pub, nh);
             capt_ed_times++;
-        }
+        }//第三次辨識
         else if(odometry.x >= thirdCapt && nodeNow > 3 && capt_ed_times == 2){
             CAM::capture_n_detect(7, cam_pub, orientation_pub, nh);
             capt_ed_times++;
@@ -209,7 +239,6 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         //     cam_mode.data = 2;
         //     capt_ed_times++;
         // }
-
         // ROS_INFO("On %d, -> %d ; go ahead: %d",nodeNow,nodeToGo,orientation.data);
         // ROS_INFO("go ahead: %d",orientation.data);
 
@@ -218,9 +247,87 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
 }
 void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     ros::Rate rate(20);
-    while(nh.ok()){
-        cmd_laji.data = 1;
-        laji_pub.publish(cmd_laji);
+    ROS_INFO("binBaiYa");
+    int cmdori_6_times = 0;
+    bool secRESET = false;
+    // while(nh.ok() && MAP::nodeNow < 13){
+    while(nh.ok() && nodeToGo == 14){
+        ros::spinOnce();
+        //在node上
+        if(onNode){
+            //檢查odom是否在node一定範圍內
+            if(MAP::check_onNode(nodeToGo) == 0){
+                ROS_INFO("Node misjudgment!!");
+                onNode = false;
+                continue;
+            }
+            //第一次辨識
+            if(nodeNow == -1){
+                CAM::capture_n_detect(1, cam_pub, orientation_pub, nh);
+                capt_ed_times ++;
+            }
+            //更新現在的node
+            nodeNow = nodeToGo;
+            odometry.x = MAP::node[nodeNow].second.first;
+            odometry.y = MAP::node[nodeNow].second.second;
+            //更新要去的node
+            auto arr = MAP::adj_list[nodeNow];
+            int max = -1;
+            for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
+            if(max == -1){
+                ROS_INFO("NoWay!!");
+                return;
+            }
+            nodeToGo = max;
+            //發布要去的node
+            ODOM::oriNow = orientation.data = MAP::cmd_ori(nodeToGo, nodeNow);
+            MAP::eraseEdge(nodeToGo, nodeNow);
+            onNode = false;
+
+            ROS_INFO("On %d, -> %d ; go ahead: %d",nodeNow,nodeToGo,orientation.data);
+
+        }
+
+        if(nodeNow == 16){            
+            int cmdori_7_times = 0;
+            while(nh.ok() && cmdori_7_times < time_7*20){
+                if(cmdori_7_times < 40){
+                    orientation.data = 7;
+                }
+                else    orientation.data = -1;
+                orientation_pub.publish(orientation);
+            }
+        }
+
+        //靠近node時減速
+        if(ODOM::slow(nodeToGo))     orientation.data = -2;
+
+        //跨坎劇本
+        if(odometry.x >= 140 + 20 && cmdori_6_times < 600){
+            orientation.data = 6;
+            cmdori_6_times++;
+        }else if(cmdori_6_times == 600){
+            // while(){
+                //左移右移 追到線
+            // }
+            orientation.data = 0;
+            cmdori_6_times++;
+            odometry.x = 300;
+        }
+        orientation_pub.publish(orientation);
+
+        //節點補償
+        if(MAP::check_onNode(nodeToGo) == 2){
+            if(nodeToGo - nodeNow == 3 && nodeToGo > 3 && nodeToGo < 7)
+                ROS_INFO("no conp");
+            else nodeLoseConp = 1;
+            // ROS_INFO("nodeLoseConp");
+        }else   nodeLoseConp = 0;
+        if(nodeLoseConp){            
+            std_msgs::Bool ONE;
+            ONE.data = 1;
+            node_detect_pub.publish(ONE);
+        }
         rate.sleep();
     }
 }

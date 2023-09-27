@@ -2,12 +2,7 @@
 
 ros::Publisher laji_pub = nh.advertise<std_msgs::Int8>("/laji", 1);
 
-namespace SCRIPT{
-    void firstLevel(ros::NodeHandle& nh);
-    void binBaiYa(ros::NodeHandle& nh);
-    void dustBox(ros::NodeHandle& nh);
-    void testLine(ros::NodeHandle& nh);
-}
+
 void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ros::Rate rate(20);
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
