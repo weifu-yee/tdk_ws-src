@@ -115,7 +115,6 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ros::Rate rate(20);
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
     int cmdori_6_times = 0;
-    // int cmdori_6_times = 800;   //
     while(nh.ok() && MAP::nodeNow < 13){
         cam_pub.publish(cam_mode);
         ros::spinOnce();
@@ -125,8 +124,6 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             //逆時針轉90度
                 ros::spinOnce();
                 ODOM::oriNow = orientation.data = 4;
-                // rotate_ang.angular.z = 1;
-                // cmd_vel_pub.publish(rotate_ang);
                 orientation_pub.publish(orientation);
                 rate.sleep();
                 ROS_INFO("rotating");
@@ -137,22 +134,22 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         }
 
         if(onNode){
-            // nodeLoseConp = 0;
+            //檢查odom是否在node一定範圍內
             if(MAP::check_onNode(nodeToGo) == 0){
                 ROS_INFO("Node misjudgment!!");
                 onNode = false;
                 continue;
             }
-            
+            //第一次辨識
             if(nodeNow == -1){
                 CAM::capture_n_detect(1, cam_pub, orientation_pub, nh);
                 capt_ed_times ++;
             }
+            //更新現在的node
             nodeNow = nodeToGo;
-
             odometry.x = MAP::node[nodeNow].second.first;
             odometry.y = MAP::node[nodeNow].second.second;
-
+            //更新要去的node
             auto arr = MAP::adj_list[nodeNow];
             int max = -1;
             for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;

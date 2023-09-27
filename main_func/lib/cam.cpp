@@ -42,7 +42,8 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
         }
         _a = a;     _b = b;
         // ROS_INFO("flag = %d",flag);
-        _pub4 ++;
+        _pub4 ++;        
+        // ROS_INFO("_pub4:%d",_pub4);
         rate.sleep();
     }while(!flag && nh.ok());
     what_to_erase(_a, _b);

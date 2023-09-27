@@ -14,7 +14,7 @@ ros::Publisher detect_pub;
 VideoCapture cap;
 std_msgs::Bool detect_msg;
 
-bool flag1, flag2, flag3 = true;
+bool flag1 = true, flag2 = true, flag3 = true;
 
 bool openCam(){
     cap.open(0, CAP_V4L2);
@@ -58,20 +58,23 @@ bool detect(){
         rate.sleep();
     }
     
-    ROS_INFO("[3] Detect Finish.");
+    // ROS_INFO("[3] Detect Finish.");
     return success;
 }
 
 void modeCallback(const std_msgs::Int32::ConstPtr& msg)
 {
     int att, mode = msg->data;
-    if (mode == 1 && flag1) { 
+    if (mode == 1 && flag1) {
+        flag1 = 0;
         att = 0;
         while(!openCam() && att<ATTEMPT) att++;
     } else if (mode == 2 && flag2) {
+        flag2 = 0;
         att = 0;
         while(!closeCam() && att<ATTEMPT) att++;
     } else if (mode == 3 && flag3) {
+        flag3 = 0;
         att = 0;
         while(!detect() && att<ATTEMPT) att++;
     } else if (mode == 4) {
