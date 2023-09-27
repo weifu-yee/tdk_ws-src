@@ -18,6 +18,7 @@ def detect_img():
     print("[YOLO] start inference ...")
     img_path = f"/home/ditrobotics/tdk_ws/src/yolov8/jpg/capture.jpg"
     results = model.predict(source=img_path, save=True)
+    rospy.loginfo("[3] Detect Finished")
 
     # Get detected class name
     cls_name = []
@@ -27,7 +28,7 @@ def detect_img():
     # update msg
     msg.data = [int(x + 1) for x in cls_name]
     pub.publish(msg)
-    rospy.loginfo("Published detected class: %s", msg.data)
+    rospy.loginfo("[3] Published detected class: %s", msg.data)
 
 def main():
     rospy.init_node('detect_node')

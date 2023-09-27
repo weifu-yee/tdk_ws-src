@@ -151,6 +151,8 @@ include_directories(
 
 add_executable(cam src/cam.cpp)
 target_link_libraries(cam ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_executable(cam_save src/cam_save.cpp)
+target_link_libraries(cam_save ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node

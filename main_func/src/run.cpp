@@ -132,7 +132,8 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             ODOM::oriNow = orientation.data = 0;
             ROS_INFO("rotate_ed");
         }
-
+        
+        //在node上
         if(onNode){
             //檢查odom是否在node一定範圍內
             if(MAP::check_onNode(nodeToGo) == 0){
@@ -158,7 +159,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
                 return;
             }
             nodeToGo = max;
-
+            //發布要去的node
             ODOM::oriNow = orientation.data = MAP::cmd_ori(nodeToGo, nodeNow);
             MAP::eraseEdge(nodeToGo, nodeNow);
             onNode = false;
