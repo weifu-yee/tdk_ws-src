@@ -5,6 +5,7 @@
 
 extern double secondCapt;
 extern double thirdCapt;
+extern int _pub4;
 
 namespace CAM{
     extern set<int> numbers;

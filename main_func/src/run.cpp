@@ -10,6 +10,7 @@ int nodeToGo;
 double xNow, xLast = -1;
 bool nodeLoseConp = 0;
 int capt_ed_times = 0;
+bool rotate_ed = 0;
 
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
@@ -43,10 +44,11 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
     for(auto i:the_numbers->data){
         CAM::numbers.insert(i);
     }
+    _pub4 = 0;
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
-    ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
+    // ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
 }
 
 int main(int argc, char **argv){
@@ -82,32 +84,21 @@ int main(int argc, char **argv){
 
 
     */
-    // MAP::nodeNow = 4;       //
+    // MAP::nodeNow = 10;       //
     // odometry.x = 330;       //
-    // nodeToGo = 7;           //    
+    // nodeToGo = 11;           //    
+
+    ros::Rate delay3(1);
+    delay3.sleep();
+    delay3.sleep();
+    delay3.sleep();
 
     SCRIPT::firstLevel(nh);
     ROS_INFO("pass 1st Level!!");
 
-    ros::Rate rate(20);
-    while(nh.ok() && odometry.theta < PI/2){
-        //逆時針轉90度
-        ros::spinOnce();
-        ODOM::oriNow = orientation.data = 4;
-        // rotate_ang.angular.z = 1;
-        // cmd_vel_pub.publish(rotate_ang);
-        orientation_pub.publish(orientation);
-        rate.sleep();
-    }
-    while(nh.ok() && odometry.theta < 90){
-        //逆時針轉90度
-        ros::spinOnce();
-        ODOM::oriNow = orientation.data = 4;
-        // rotate_ang.angular.z = 1;
-        // cmd_vel_pub.publish(rotate_ang);
-        orientation_pub.publish(orientation);
-        rate.sleep();
-    }
+    //往左走65cm
+    
+    ROS_INFO("rotate_done!!");
     int cmdori_7_times = 0;
     while(nh.ok()){
         if(cmdori_7_times < 40){
@@ -125,9 +116,25 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
     int cmdori_6_times = 0;
     // int cmdori_6_times = 800;   //
-    while(nh.ok() && MAP::nodeNow < 12){
+    while(nh.ok() && MAP::nodeNow < 13){
         cam_pub.publish(cam_mode);
         ros::spinOnce();
+
+        if(nodeNow == 12 && !rotate_ed){
+            while(nh.ok() && odometry.theta < PI/2){
+            //逆時針轉90度
+                ros::spinOnce();
+                ODOM::oriNow = orientation.data = 4;
+                // rotate_ang.angular.z = 1;
+                // cmd_vel_pub.publish(rotate_ang);
+                orientation_pub.publish(orientation);
+                rate.sleep();
+                ROS_INFO("rotating");
+            }
+            rotate_ed = 1;
+            ODOM::oriNow = orientation.data = 0;
+            ROS_INFO("rotate_ed");
+        }
 
         if(onNode){
             // nodeLoseConp = 0;
@@ -156,29 +163,24 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             nodeToGo = max;
 
             ODOM::oriNow = orientation.data = MAP::cmd_ori(nodeToGo, nodeNow);
-            // if(nodeNow == 1 && nodeToGo == 4
-            // || nodeNow == 2 && nodeToGo == 5
-            // || nodeNow == 3 && nodeToGo == 6){
-            //     orientation.data = 6;
-            // }
-
             MAP::eraseEdge(nodeToGo, nodeNow);
             onNode = false;
 
             ROS_INFO("On %d, -> %d ; go ahead: %d",nodeNow,nodeToGo,orientation.data);
 
         }
-        
-        // if(MAP::disToOdom(nodeToGo) < decelerationZone)    orientation.data = -2;
 
         if(ODOM::slow(nodeToGo))     orientation.data = -2;
-        if(odometry.x >= 140 + 10 && cmdori_6_times < 600){
+        if(odometry.x >= 140 + 20 && cmdori_6_times < 600){
             orientation.data = 6;
             cmdori_6_times++;
         }else if(cmdori_6_times == 600){
+            // while(){
+                //左移右移 追到線
+            // }
             orientation.data = 0;
             cmdori_6_times++;
-            odometry.x = 330;
+            odometry.x = 300;
         }
 
         orientation_pub.publish(orientation);

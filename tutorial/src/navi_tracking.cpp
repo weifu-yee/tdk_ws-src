@@ -29,6 +29,7 @@ geometry_msgs::Twist vel;
 //tracker arguments --from Arduino
 double Err_d,Err_theta;
 int8_t std_tracker_data[20],temp[20];
+// int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
 int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
 
 
@@ -84,7 +85,7 @@ std_msgs::Bool node_detect(){
         result.data = true;
         return result;
     }
-    if(std_tracker_data[8] == black && std_tracker_data[7] == black && std_tracker_data[12] == black){
+    if(std_tracker_data[6] == black && std_tracker_data[7] == black && std_tracker_data[12] == black){
         result.data = true;
         return result;
     }
@@ -203,10 +204,8 @@ int main(int argc, char** argv) {
         nh.getParam("/V",V);
         nh.getParam("/vel_limit",vel_limit);
 
-        
         if(ori >= 0 && ori < 4 || ori == -2){
             if(ori == -2){
-
                 _phy_maxMS = slowMS;
                 ori = last_ori;
             }else if(ori == -1){
@@ -216,8 +215,9 @@ int main(int argc, char** argv) {
             }
 
 
-            node_point = node_detect();
+            
             tracker.tracker_data_std();
+            node_point = node_detect();
 
             if(ori_old != ori){
                 prev_ori = ori_old;
@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
             double VY = V*sin(((double)ori)*0.5*pi) + u_d*cos(((double)ori)*0.5*pi);
 
 //
-            if(!PID_mode){
+            if(!PID_mode && prev_ori != -1){
                 u_d = node_overshoot_logic();
                 u_theta = 0;
                 VX = -u_d*sin(((double)ori)*0.5*pi);

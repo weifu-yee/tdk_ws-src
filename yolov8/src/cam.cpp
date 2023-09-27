@@ -14,10 +14,12 @@ ros::Publisher detect_pub;
 VideoCapture cap;
 std_msgs::Bool detect_msg;
 
+bool flag1, flag2, flag3 = true;
+
 bool openCam(){
     cap.open(0, CAP_V4L2);
     if (cap.isOpened()) {
-        // ROS_INFO("[1] Camera opened.");
+        ROS_INFO("[1] Camera opened.");
         return true;
     } else {
         ROS_ERROR("[1] Could not open the camera. Retrying...");
@@ -28,10 +30,10 @@ bool openCam(){
 bool closeCam(){
     if (cap.isOpened()) {
         cap.release();
-        // ROS_INFO("[2] Camera closed.");
+        ROS_INFO("[2] Camera closed.");
         return true;
     } else {
-        // ROS_ERROR("[2] Could not close the camera. Retrying...");
+        ROS_ERROR("[2] Could not close the camera. Retrying...");
         return false;
     }
 }
@@ -41,12 +43,11 @@ bool detect(){
     std::ostringstream img_path_stream;
     img_path_stream << "/home/ditrobotics/tdk_ws/src/yolov8/jpg/capture.jpg";
     std::string img_path = img_path_stream.str();
-    // idx++;
 
     Mat frame;
     cap >> frame; 
     bool success = cv::imwrite(img_path, frame);  // Save the image
-    if (success); //ROS_INFO("[3] Image captured and saved.");
+    if (success) ROS_INFO("[3] Image captured and saved.");
     else ROS_ERROR("[3] Failed to save the image. Retrying...");
     
     // call detect.py
@@ -57,22 +58,26 @@ bool detect(){
         rate.sleep();
     }
     
-    // ROS_INFO("[3] Detect Finish.");
+    ROS_INFO("[3] Detect Finish.");
     return success;
 }
 
 void modeCallback(const std_msgs::Int32::ConstPtr& msg)
 {
     int att, mode = msg->data;
-    if (mode == 1) { 
+    if (mode == 1 && flag1) { 
         att = 0;
         while(!openCam() && att<ATTEMPT) att++;
-    } else if (mode == 2) {
+    } else if (mode == 2 && flag2) {
         att = 0;
         while(!closeCam() && att<ATTEMPT) att++;
-    } else if (mode == 3) {
+    } else if (mode == 3 && flag3) {
         att = 0;
         while(!detect() && att<ATTEMPT) att++;
+    } else if (mode == 4) {
+        flag1 = true;
+        flag2 = true;
+        flag3 = true;
     }
 }
 

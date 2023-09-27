@@ -1,7 +1,7 @@
 <launch>
     <include file = "$(find tutorial)/launch/test.launch" />
     <include file = "$(find main_func)/launch/run.launch" />
-    <!-- <node name="cam" pkg="yolov8" type="cam" output="screen" /> -->
-    <node name="cam" pkg="yolov8" type="cam" />
+    <node name="cam" pkg="yolov8" type="cam" output="screen" />
+    <!-- <node name="cam" pkg="yolov8" type="cam" /> -->
     <node name="detect" pkg="yolov8" type="detect.py" output="screen" />
 </launch>

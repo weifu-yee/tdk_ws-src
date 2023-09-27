@@ -4,6 +4,7 @@ set<int> CAM::numbers;
 
 double secondCapt = 300;
 double thirdCapt = 430;
+int _pub4 = 0;
 
 void CAM::capture_n_detect(int op, ros::Publisher& cam_pub, 
         ros::Publisher& orientation_pub, ros::NodeHandle& nh){
@@ -19,6 +20,8 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
     int _a = 0, _b = 0;
     do{     //the capture and detect process
         ros::spinOnce();
+        if(_pub4 > 60)   cam_mode.data = 4;
+        else    cam_mode.data = 3;
         cam_pub.publish(cam_mode);
         orientation_pub.publish(cease);
         int a = 0, b = 0;
@@ -39,6 +42,7 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
         }
         _a = a;     _b = b;
         // ROS_INFO("flag = %d",flag);
+        _pub4 ++;
         rate.sleep();
     }while(!flag && nh.ok());
     what_to_erase(_a, _b);
