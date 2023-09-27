@@ -56,10 +56,13 @@ bool detect(){
     
     // Create the filename
     std::ostringstream img_path_stream_save;
-    img_path_stream_save << "new-train-set/capture_" << buf << ".jpg";
+    img_path_stream_save << "/home/ditrobotics/tdk_ws/src/yolov8/new-train-set/capture_" << buf << ".jpg";
     std::string img_path_save = img_path_stream_save.str();
 
-    cv::imwrite(img_path_save, frame);  // Save the image (save)
+    bool success_save = cv::imwrite(img_path_save, frame);  // Save the image
+    if (success_save) ROS_INFO("[3] Image_save captured and saved.");
+    else ROS_ERROR("[3] Failed to save the image_save. Retrying...");
+    
 /* ADDITIONAL SAVE*/
 
 /* ORIGINAL SAVE*/
