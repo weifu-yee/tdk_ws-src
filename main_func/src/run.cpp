@@ -25,7 +25,7 @@ ros::Subscriber number_sub;
 ros::Subscriber odom_sub;
 
 std_msgs::Int8 orientation;
-std_msgs::Int8 cmd_vel;
+geometry_msgs::Twist cmd_vel;
 std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
 geometry_msgs::Twist rotate_ang;
@@ -78,6 +78,30 @@ int main(int argc, char **argv){
 
     orientation.data = 0;   //front
     cam_mode.data = 1;
+
+    // ros::Rate rate(20);
+    // odometry.y = 331;
+    // bool secRESET = 0;
+    // while(rotate_ed && odometry.y >= 330 && odometry.y < 370){
+    //         ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+    //         if(odometry.x < 710)    cmd_vel.linear.x = 15;
+    //         else    cmd_vel.linear.x = 0;
+    //         if(odometry.y < 370)    cmd_vel.linear.y = 15;
+    //         else    cmd_vel.linear.y = 0;
+
+    //         if(odometry.x >= 710 && odometry.y >= 370){
+    //             odometry.x = 710;
+    //             odometry.y = 370;
+    //             secRESET = true;
+    //             ROS_INFO("secRESET!!");
+    //             break;
+    //         }
+
+    //         orientation_pub.publish(orientation);
+    //         cmd_vel_pub.publish(cmd_vel);
+    //         ROS_INFO("shifting");
+    //         rate.sleep();
+    //     }
 
     /*
     // ROS_INFO("On %d, -> %d",nodeNow,nodeToGo);
@@ -252,7 +276,8 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     ros::Rate rate(20);
     ROS_INFO("binBaiYa");
     nodeNow = 12;   nodeToGo = 13;
-    while(nh.ok() && nodeToGo == 14){
+    // while(nh.ok() && nodeToGo == 14){
+    while(nh.ok()){
         ros::spinOnce();
         //在node上
         if(onNode){
@@ -300,17 +325,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
         if(ODOM::slow(nodeToGo))     orientation.data = -2;
 
         //跨坎劇本
-        if(odometry.x >= 140 + 20 && cmdori_6_times < 600){
-            orientation.data = 6;
-            cmdori_6_times++;
-        }else if(cmdori_6_times == 600){
-            // while(){
-                //左移右移 追到線
-            // }
-            orientation.data = 0;
-            cmdori_6_times++;
-            odometry.x = 300;
-        }
+        
         orientation_pub.publish(orientation);
 
         //節點補償

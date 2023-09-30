@@ -1,8 +1,8 @@
 # constant
 span: 0.1
 # phy_maxMS: 10
-# phy_maxMS: 46
-phy_maxMS: 35
+phy_maxMS: 46
+# phy_maxMS: 28
 slowMS: 15
 
 # soft

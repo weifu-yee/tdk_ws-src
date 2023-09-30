@@ -17,9 +17,9 @@
 #include "std_msgs/Int32MultiArray.h"
 #include "geometry_msgs/Twist.h"
 
-#define buildNodeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/buildNode.yaml"
-#define initBuildEdgeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/initBuildEdge.yaml"
-#define num_of_nodes 16
+#define buildNodeFilePath "/root/tdk_ws/src/main_func/params/buildNode.yaml"
+#define initBuildEdgeFilePath "/root/tdk_ws/src/main_func/params/initBuildEdge.yaml"
+#define num_of_nodes 17
 
 using namespace std;
 
