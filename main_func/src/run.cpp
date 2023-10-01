@@ -79,43 +79,6 @@ int main(int argc, char **argv){
     orientation.data = 0;   //front
     cam_mode.data = 1;
 
-    // ros::Rate rate(20);
-    // odometry.y = 331;
-    // bool secRESET = 0;
-    // while(rotate_ed && odometry.y >= 330 && odometry.y < 370){
-    //         ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-    //         if(odometry.x < 710)    cmd_vel.linear.x = 15;
-    //         else    cmd_vel.linear.x = 0;
-    //         if(odometry.y < 370)    cmd_vel.linear.y = 15;
-    //         else    cmd_vel.linear.y = 0;
-
-    //         if(odometry.x >= 710 && odometry.y >= 370){
-    //             odometry.x = 710;
-    //             odometry.y = 370;
-    //             secRESET = true;
-    //             ROS_INFO("secRESET!!");
-    //             break;
-    //         }
-
-    //         orientation_pub.publish(orientation);
-    //         cmd_vel_pub.publish(cmd_vel);
-    //         ROS_INFO("shifting");
-    //         rate.sleep();
-    //     }
-
-    /*
-    // ROS_INFO("On %d, -> %d",nodeNow,nodeToGo);
-    // ROS_INFO("(%lf, %lf, %lf)",odometry.x, odometry.y, odometry.theta);
-    // ROS_INFO("go ahead: %d",orientation.data);
-
-    // SCRIPT::testLine(nh);
-
-
-    */
-    // MAP::nodeNow = 10;       //
-    // odometry.x = 330;       //
-    // nodeToGo = 11;           //    
-
     ros::Rate delay3(1);
     delay3.sleep();
     delay3.sleep();
@@ -125,18 +88,6 @@ int main(int argc, char **argv){
     ROS_INFO("pass 1st Level!!");
     SCRIPT::binBaiYa(nh);
 
-    //往左走45cm
-    
-
-    // int cmdori_7_times = 0;
-    // while(nh.ok()){
-    //     if(cmdori_7_times < 40){
-    //         orientation.data = 7;
-    //     }
-    //     else    orientation.data = -1;
-    //     orientation_pub.publish(orientation);
-    // }
-    
     return 0;
 }
 
