@@ -159,7 +159,7 @@ add_executable(run src/run.cpp lib/map.cpp lib/cam.cpp lib/odom.cpp)
 target_link_libraries(run ${catkin_LIBRARIES} yaml-cpp)
 add_dependencies(run ${catkin_EXPORTED_TARGETS})
 
-add_executable(pub_num src/pub_num.cpp)
+add_executable(pub_num debug/pub_num.cpp)
 target_link_libraries(pub_num ${catkin_LIBRARIES} yaml-cpp)
 add_dependencies(pub_num ${catkin_EXPORTED_TARGETS})
 

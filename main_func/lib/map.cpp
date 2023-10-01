@@ -1,11 +1,10 @@
 #include "map.h"
-#include "cam.h"
-#include "odom.h"
 
 double tolerence = 13;
 double decelerationZone = 16;
 double nodeLoseConpDELAY = 2;
 int MAP::nodeNow = -1;
+int MAP::nodeToGo = 0;
 vector<pair<int, pair<double, double>>> MAP::node;     //<index, x, y>
 vector<set<int>> MAP::adj_list(num_of_nodes);       //adjacency_list
 
@@ -52,6 +51,18 @@ void MAP::initBuildEdge(){
         int v = edge[1].as<int>();
         buildEdge(u,v);
     }
+}
+int MAP::startPointInit(int now,int togo){
+    MAP::nodeNow = now;
+    MAP::nodeToGo = togo;
+    if(now != -1){
+        ODOM::odometry.x = MAP::node[now].second.first;
+        ODOM::odometry.y = MAP::node[now].second.second;
+    }else{
+        ODOM::odometry.x = 60;
+        ODOM::odometry.y = 180;
+    }
+    return MAP::cmd_ori(now, togo);
 }
 void MAP::eraseEdge(int u, int v){
     if(v == -1)  return;

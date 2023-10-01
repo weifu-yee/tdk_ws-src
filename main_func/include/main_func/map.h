@@ -17,6 +17,8 @@
 #include "std_msgs/Int32MultiArray.h"
 #include "geometry_msgs/Twist.h"
 
+#include "cam.h"
+#include "odom.h"
 #define buildNodeFilePath "/root/tdk_ws/src/main_func/params/buildNode.yaml"
 #define initBuildEdgeFilePath "/root/tdk_ws/src/main_func/params/initBuildEdge.yaml"
 #define num_of_nodes 17
@@ -28,11 +30,12 @@ extern double decelerationZone;
 extern double nodeLoseConpDELAY;
 
 namespace MAP{
-    extern int nodeNow;
+    extern int nodeNow, nodeToGo;
     extern vector<pair<int, pair<double, double>>> node;    //<index, x, y>
     extern vector<set<int>> adj_list;     //adjacency_list
     void buildNode();
     void initBuildEdge();
+    int startPointInit(int now,int togo);
     void eraseEdge(int u, int v);
     int cmd_ori(int u, int v);
     int disToOdom(int u);

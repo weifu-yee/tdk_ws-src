@@ -2,99 +2,92 @@
 #include "cam.h"
 #include "odom.h"
 using namespace std;
-using namespace MAP;
 
 #define time_7 15
 
+//global vars
 bool isNodeLast = false;
 bool onNode = false;
-int nodeToGo;
 double xNow, xLast = -1;
 bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 bool rotate_ed = 0;
-
+//publisher
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
 ros::Publisher cam_pub;
 ros::Publisher node_detect_pub;
 ros::Publisher laji_pub;
-
+//subscriber
 ros::Subscriber node_sub;
 ros::Subscriber number_sub;
 ros::Subscriber odom_sub;
-
+//msgs
 std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
 std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
 geometry_msgs::Twist rotate_ang;
 
+//scripts
 namespace SCRIPT{
     void firstLevel(ros::NodeHandle& nh);
     void binBaiYa(ros::NodeHandle& nh);
     void dustBox(ros::NodeHandle& nh);
     void testLine(ros::NodeHandle& nh);
 }
-void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
-    bool isNode = is_node->data;
-    if(isNode != isNodeLast && isNode){
-        onNode = true;
-        // ROS_INFO("(%.1lf, %.1lf, %.1lf) faceTo: %d",odometry.x, odometry.y, odometry.theta, orientation.data);
-    }
-    isNodeLast = isNode;
-}
-void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
-    for(auto i:the_numbers->data){
-        CAM::numbers.insert(i);
-    }
-    _pub4 = 0;
-}
-void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
-    odometry.update(ins_vel);
-    // ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
-}
 
+//initialization
+void runInit(ros::NodeHandle& nh);
+
+//Callback
+void nodeCallback(const std_msgs::Bool::ConstPtr& is_node);
+void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers);
+void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel);
+
+//main
 int main(int argc, char **argv){
     ros::init(argc, argv, "main_func");
     ros::NodeHandle nh;
-    orientation_pub = nh.advertise<std_msgs::Int8>("/cmd_ori", 1);
-    cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-    node_sub = nh.subscribe("/node_detect",1,nodeCallback);
-    cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
-    number_sub = nh.subscribe("/numbers",1,numberCallback);
-    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
-    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
-    node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
-    laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
 
-    nh.getParam("/tolerence",tolerence);
-    nh.getParam("/decelerationZone",decelerationZone);
-    nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);
-    nh.getParam("/secondCapt",secondCapt);
-    nh.getParam("/thirdCapt",thirdCapt );
+    runInit(nh);
+
     MAP::buildNode();
     MAP::initBuildEdge();
 
-    orientation.data = 0;   //front
+    // orientation.data = 0;   //front
     cam_mode.data = 1;
+    ODOM::oriNow = orientation.data = MAP::startPointInit(0,1);
 
-    ros::Rate delay3(1);
-    delay3.sleep();
-    delay3.sleep();
-    delay3.sleep();
-
-    SCRIPT::firstLevel(nh);
-    ROS_INFO("pass 1st Level!!");
-    SCRIPT::binBaiYa(nh);
-
+    int ONE = 1;
+    switch(ONE){
+    // switch(RESET::state){
+        case 0:
+            while(nh.ok())  ros::spinOnce();
+        case 1:
+            SCRIPT::firstLevel(nh);
+            ROS_INFO("pass 1st Level!!");
+        case 2:
+            SCRIPT::binBaiYa(nh);
+            ROS_INFO("pass binBaiYa!!");
+        case 3:
+            SCRIPT::dustBox(nh);
+            ROS_INFO("pass dustBox!!");
+        case 4:
+            SCRIPT::dustBox(nh);
+            ROS_INFO("pass dustBox!!");
+        default:
+            break;
+    }
     return 0;
 }
 
+//scripts
 void SCRIPT::firstLevel(ros::NodeHandle& nh){
-    ros::Rate rate(20);
     ROS_INFO("On -1, -> 0 ; go ahead: 0");
-    int cmdori_6_times = 0;
+
+    ros::Rate rate(20);
+    int ori6State = 0;
     bool secRESET = false;
     // while(nh.ok() && MAP::nodeNow < 13){
     while(nh.ok() && !secRESET){
@@ -177,15 +170,15 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         if(ODOM::slow(nodeToGo))     orientation.data = -2;
 
         //跨坎劇本
-        if(odometry.x >= 140 + 20 && cmdori_6_times < 600){
+        if(odometry.x >= 140 + 20 && ori6State < 600){
             orientation.data = 6;
-            cmdori_6_times++;
-        }else if(cmdori_6_times == 600){
+            ori6State++;
+        }else if(ori6State == 600){
             // while(){
                 //左移右移 追到線
             // }
             orientation.data = 0;
-            cmdori_6_times++;
+            ori6State++;
             odometry.x = 300;
         }
         orientation_pub.publish(orientation);
@@ -357,4 +350,41 @@ void SCRIPT::testLine(ros::NodeHandle& nh){
         oriParam_last = oriParam;
         rate.sleep();
     }
+}
+
+void runInit(ros::NodeHandle& nh){
+    orientation_pub = nh.advertise<std_msgs::Int8>("/cmd_ori", 1);
+    cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    node_sub = nh.subscribe("/node_detect",1,nodeCallback);
+    cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
+    number_sub = nh.subscribe("/numbers",1,numberCallback);
+    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
+    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
+    node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
+    laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
+
+    nh.getParam("/tolerence",tolerence);
+    nh.getParam("/decelerationZone",decelerationZone);
+    nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);
+    nh.getParam("/secondCapt",secondCapt);
+    nh.getParam("/thirdCapt",thirdCapt );
+}
+
+void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
+    bool isNode = is_node->data;
+    if(isNode != isNodeLast && isNode){
+        onNode = true;
+        // ROS_INFO("(%.1lf, %.1lf, %.1lf) faceTo: %d",odometry.x, odometry.y, odometry.theta, orientation.data);
+    }
+    isNodeLast = isNode;
+}
+void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
+    for(auto i:the_numbers->data){
+        CAM::numbers.insert(i);
+    }
+    _pub4 = 0;
+}
+void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
+    odometry.update(ins_vel);
+    ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d",MAP::nodeNow,nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow);
 }
