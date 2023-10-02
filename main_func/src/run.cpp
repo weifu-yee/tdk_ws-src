@@ -1,6 +1,7 @@
 #include "map.h"
 #include "cam.h"
 #include "odom.h"
+#include "reset.h"
 using namespace std;
 
 #define time_7 15
@@ -60,9 +61,7 @@ int main(int argc, char **argv){
     cam_mode.data = 1;
     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now,start_togo);
 
-    int ONE = 1;
-    switch(ONE){
-    // switch(RESET::state){
+    switch(RESET::state){
         case 0:
             while(nh.ok())  ros::spinOnce();
         case 1:
@@ -92,7 +91,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     bool secRESET = false;
     // while(nh.ok() && MAP::nodeNow < 13){
     while(nh.ok() && !secRESET){
-        std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
+        // std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
         cam_pub.publish(cam_mode);
         ros::spinOnce();
 
@@ -111,13 +110,14 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             ROS_INFO("rotate_done!!");
         }
         //第二重製區偏移
-        while(rotate_ed && odometry.y >= 330 && odometry.y < 370){
-            ROS_INFO("secRESETing......");
+        // while(rotate_ed && ((odometry.y >= 330 && odometry.y < 370) || (odometry.y >= 330 && odometry.y < 370))){
+        while(rotate_ed && (odometry.x < 710 || odometry.y < 370)){
+            ros::spinOnce();
             ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-            if(odometry.x < 710)    cmd_vel.linear.x = 15;
-            else    cmd_vel.linear.x = 0;
-            if(odometry.y < 370)    cmd_vel.linear.y = 15;
+            if(odometry.x < 710)    cmd_vel.linear.y = 15;
             else    cmd_vel.linear.y = 0;
+            if(odometry.y < 370)    cmd_vel.linear.x = -15;
+            else    cmd_vel.linear.x = 0;
 
             if(odometry.x >= 710 && odometry.y >= 370){
                 odometry.x = 710;

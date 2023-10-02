@@ -11,15 +11,17 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
 
 
     double x_car, y_car;
-    if(ODOM::oriNow > 10 || ODOM::oriNow % 2 == 0)
+    if(ODOM::oriNow >= 10 || ODOM::oriNow % 2 == 0)
         x_car = ins_vel->linear.x * (dt);
-    if(ODOM::oriNow > 10 || ODOM::oriNow % 2 == 1)
+    if(ODOM::oriNow >= 10 || ODOM::oriNow % 2 == 1)
         y_car = ins_vel->linear.y * (dt);
 
     int xMat[] = {1, 0, -1, 0};
     int yMat[] = {0, 1, 0, -1};
-    x += xMat[ODOM::faceTo] * x_car + xMat[ODOM::faceTo] * y_car;
-    y += yMat[ODOM::faceTo] * x_car + yMat[ODOM::faceTo] * y_car;
+    int i = -ODOM::faceTo + 4;   i %= 4;
+    int j = -ODOM::faceTo + 5;   j %= 4;
+    x += xMat[i] * x_car + yMat[i] * y_car;
+    y += xMat[j] * x_car + yMat[j] * y_car;
 
 
     if(ODOM::oriNow == 4 || ODOM::oriNow == 5)
