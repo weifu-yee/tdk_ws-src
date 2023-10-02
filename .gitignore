@@ -1,4 +1,6 @@
-CMakeList.txt
+CMakeList.txt/
 .vscode
+
+/yolov8/CMakeLists.txt
 map.h
 pub_num.cpp
