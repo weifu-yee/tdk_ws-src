@@ -36,6 +36,10 @@ namespace SCRIPT{
     void firstLevel(ros::NodeHandle& nh);
     void binBaiYa(ros::NodeHandle& nh);
     void dustBox(ros::NodeHandle& nh);
+    
+    void from_2To13(ros::NodeHandle& nh);
+    void from13To14(ros::NodeHandle& nh);
+
     void testLine(ros::NodeHandle& nh);
 }
 
@@ -68,9 +72,12 @@ int main(int argc, char **argv){
             SCRIPT::firstLevel(nh);
             ROS_INFO("pass 1st Level!!");
         case 2:
+            
+            SCRIPT::from_2To13(nh);
             SCRIPT::binBaiYa(nh);
             ROS_INFO("pass binBaiYa!!");
         case 3:
+            SCRIPT::from13To14(nh);
             SCRIPT::dustBox(nh);
             ROS_INFO("pass dustBox!!");
         case 4:
@@ -114,9 +121,9 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         while(rotate_ed && (odometry.x < 710 || odometry.y < 370)){
             ros::spinOnce();
             ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-            if(odometry.x < 710)    cmd_vel.linear.y = 15;
+            if(odometry.x < 710)    cmd_vel.linear.y = -2;
             else    cmd_vel.linear.y = 0;
-            if(odometry.y < 370)    cmd_vel.linear.x = -15;
+            if(odometry.y < 370)    cmd_vel.linear.x = 15;
             else    cmd_vel.linear.x = 0;
 
             if(odometry.x >= 710 && odometry.y >= 370){
@@ -219,10 +226,76 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         rate.sleep();
     }
 }
+void SCRIPT::from_2To13(ros::NodeHandle& nh){
+    ROS_INFO("from_2To13");
+    ODOM::oriNow = orientation.data = MAP::startPointInit(-2,13);
+    ros::Rate rate(20);
+    int ori6State = 0;
+    bool secRESET = false;
+    // while(nh.ok() && MAP::nodeNow < 13){
+    while(nh.ok() && !secRESET){
+        // std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
+        cam_pub.publish(cam_mode);
+        ros::spinOnce();
+
+        //在node上
+        if(onNode){
+            //檢查odom是否在node一定範圍內
+            if(MAP::check_onNode(MAP::nodeToGo) == 0){
+                ROS_INFO("Node misjudgment!!");
+                onNode = false;
+                continue;
+            }
+            //第一次辨識
+            if(MAP::nodeNow == -1){
+                CAM::capture_n_detect(1, cam_pub, orientation_pub, nh);
+                capt_ed_times ++;
+            }
+            //更新現在的node
+            MAP::nodeNow = MAP::nodeToGo;
+            odometry.x = MAP::node[MAP::nodeNow].second.first;
+            odometry.y = MAP::node[MAP::nodeNow].second.second;
+            //更新要去的node
+            auto arr = MAP::adj_list[MAP::nodeNow];
+            int max = -1;
+            for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
+            if(max == -1){
+                ROS_INFO("NoWay!!");
+                return;
+            }
+            MAP::nodeToGo = max;
+            //發布方向
+            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+            MAP::eraseEdge(MAP::nodeToGo, MAP::nodeNow);
+            onNode = false;
+
+            ROS_INFO("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
+
+        }
+
+        //靠近node時減速
+        if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
+
+        //節點補償
+        if(MAP::check_onNode(MAP::nodeToGo) == 2){
+            if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
+                ROS_INFO("no conp");
+            else nodeLoseConp = 1;
+            // ROS_INFO("nodeLoseConp");
+        }else   nodeLoseConp = 0;
+        if(nodeLoseConp){            
+            std_msgs::Bool ONE;
+            ONE.data = 1;
+            node_detect_pub.publish(ONE);
+        }
+        rate.sleep();
+    }
+}
 void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     ros::Rate rate(20);
     ROS_INFO("binBaiYa");
     MAP::nodeNow = 12;   MAP::nodeToGo = 13;
+    ODOM::oriNow = orientation.data = 0;
     // while(nh.ok() && MAP::nodeToGo == 14){
     while(nh.ok()){
         ros::spinOnce();
@@ -274,6 +347,71 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
         //跨坎劇本
         
         orientation_pub.publish(orientation);
+
+        //節點補償
+        if(MAP::check_onNode(MAP::nodeToGo) == 2){
+            if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
+                ROS_INFO("no conp");
+            else nodeLoseConp = 1;
+            // ROS_INFO("nodeLoseConp");
+        }else   nodeLoseConp = 0;
+        if(nodeLoseConp){            
+            std_msgs::Bool ONE;
+            ONE.data = 1;
+            node_detect_pub.publish(ONE);
+        }
+        rate.sleep();
+    }
+}
+void SCRIPT::from13To14(ros::NodeHandle& nh){
+    ROS_INFO("\n\nFirstLevel:\tOn %d, -> %d ; go ahead: %d\n",start_now,start_togo,ODOM::oriNow);
+
+    ros::Rate rate(20);
+    int ori6State = 0;
+    bool secRESET = false;
+    // while(nh.ok() && MAP::nodeNow < 13){
+    while(nh.ok() && !secRESET){
+        // std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
+        cam_pub.publish(cam_mode);
+        ros::spinOnce();
+
+        //在node上
+        if(onNode){
+            //檢查odom是否在node一定範圍內
+            if(MAP::check_onNode(MAP::nodeToGo) == 0){
+                ROS_INFO("Node misjudgment!!");
+                onNode = false;
+                continue;
+            }
+            //第一次辨識
+            if(MAP::nodeNow == -1){
+                CAM::capture_n_detect(1, cam_pub, orientation_pub, nh);
+                capt_ed_times ++;
+            }
+            //更新現在的node
+            MAP::nodeNow = MAP::nodeToGo;
+            odometry.x = MAP::node[MAP::nodeNow].second.first;
+            odometry.y = MAP::node[MAP::nodeNow].second.second;
+            //更新要去的node
+            auto arr = MAP::adj_list[MAP::nodeNow];
+            int max = -1;
+            for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
+            if(max == -1){
+                ROS_INFO("NoWay!!");
+                return;
+            }
+            MAP::nodeToGo = max;
+            //發布方向
+            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+            MAP::eraseEdge(MAP::nodeToGo, MAP::nodeNow);
+            onNode = false;
+
+            ROS_INFO("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
+
+        }
+
+        //靠近node時減速
+        if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
 
         //節點補償
         if(MAP::check_onNode(MAP::nodeToGo) == 2){

@@ -23,7 +23,6 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
     x += xMat[i] * x_car + yMat[i] * y_car;
     y += xMat[j] * x_car + yMat[j] * y_car;
 
-
     if(ODOM::oriNow == 4 || ODOM::oriNow == 5)
         theta += ins_vel->angular.z * (dt);
     while(theta > PI)  theta -= 2*PI;        
