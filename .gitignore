@@ -1,3 +1,5 @@
 /CMakeList.txt
 .vscode
-yolov8/CMakeList.txt
+./yolov8/CMakeList.txt
+./main_func/include/main_func/map.h
+./main_func/debug/pub_num.cpp
