@@ -1,6 +1,2 @@
 CMakeList.txt
 .vscode/
-
-*CMakeLists.txt
-map.h
-pub_num.cpp
