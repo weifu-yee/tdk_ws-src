@@ -3,6 +3,7 @@ project(yolov8)
 
 
 set(OpenCV_DIR /usr/lib/x86_64-linux-gnu/cmake/opencv4)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 

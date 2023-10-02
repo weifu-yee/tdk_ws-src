@@ -1,6 +1,6 @@
-CMakeList.txt/
-.vscode
+CMakeList.txt
+.vscode/
 
-*/CMakeLists.txt
+*CMakeLists.txt
 map.h
 pub_num.cpp
