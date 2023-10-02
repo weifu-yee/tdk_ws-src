@@ -8,10 +8,20 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
     current_time = ros::Time::now();
     dt = (current_time - last_time).toSec();
     if(std::abs(dt) > 1)  dt = 0;
+
+
+    double x_car, y_car;
     if(ODOM::oriNow > 10 || ODOM::oriNow % 2 == 0)
-        x += ins_vel->linear.x * (dt);
+        x_car = ins_vel->linear.x * (dt);
     if(ODOM::oriNow > 10 || ODOM::oriNow % 2 == 1)
-        y += ins_vel->linear.y * (dt);
+        y_car = ins_vel->linear.y * (dt);
+
+    int xMat[] = {1, 0, -1, 0};
+    int yMat[] = {0, 1, 0, -1};
+    x += xMat[ODOM::faceTo] * x_car + xMat[ODOM::faceTo] * y_car;
+    y += yMat[ODOM::faceTo] * x_car + yMat[ODOM::faceTo] * y_car;
+
+
     if(ODOM::oriNow == 4 || ODOM::oriNow == 5)
         theta += ins_vel->angular.z * (dt);
     while(theta > PI)  theta -= 2*PI;        

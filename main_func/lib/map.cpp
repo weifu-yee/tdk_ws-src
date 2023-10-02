@@ -62,6 +62,10 @@ int MAP::startPointInit(int now,int togo){
         ODOM::odometry.x = 60;
         ODOM::odometry.y = 180;
     }
+    
+    ODOM::faceTo = 0;
+    if(togo >= 13)  ODOM::faceTo = 1;
+
     return MAP::cmd_ori(now, togo);
 }
 void MAP::eraseEdge(int u, int v){
@@ -80,10 +84,10 @@ int MAP::cmd_ori(int u, int v){
     double vx = MAP::node[v].second.first;
     double vy = MAP::node[v].second.second;
     int ori;
-    if(ux > vx)     ori = 0;
-    else if(uy > vy)     ori = 1;
-    else if(ux < vx)     ori = 2;
-    else if(uy < vy)     ori = 3;
+    if(ux < vx)     ori = 0;
+    else if(uy < vy)     ori = 1;
+    else if(ux > vx)     ori = 2;
+    else if(uy > vy)     ori = 3;
     else   return -1;
     return (ori + 4 - ODOM::faceTo) % 4;
 }
