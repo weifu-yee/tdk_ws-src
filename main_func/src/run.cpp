@@ -4,8 +4,6 @@
 #include "reset.h"
 using namespace std;
 
-#define time_7 15
-
 //global vars
 int start_now = -1, start_togo = 0;
 bool isNodeLast = false;
@@ -14,6 +12,7 @@ double xNow, xLast = -1;
 bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 bool rotate_ed = 0;
+int time_6 = 30, time_7 = 15;
 //publisher
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
@@ -74,11 +73,11 @@ int main(int argc, char **argv){
             case 0:
                 while(nh.ok())  ros::spinOnce();
             case 1:
-                // SCRIPT::firstLevel(nh);
+                SCRIPT::firstLevel(nh);
                 ROS_WARN("**************** pass 1st Level!! ****************");
             case 2:            
-                // SCRIPT::from_A_To_B(nh, -2, 13);
-                // SCRIPT::binBaiYa(nh);
+                SCRIPT::from_A_To_B(nh, -2, 13);
+                SCRIPT::binBaiYa(nh);
                 ROS_WARN("**************** pass binBaiYa!! ****************");
             case 3:
                 SCRIPT::from_A_To_B(nh, 13, 14);
@@ -192,17 +191,44 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
 
         //跨坎劇本
-        if(odometry.x >= 140 + 20 && ori6State < 600){
-            orientation.data = 6;
-            ori6State++;
-        }else if(ori6State == 600){
-            // while(){
+        if(odometry.x >= 140 + 20 && MAP::nodeNow != -1 && ori6State == 0){
+            int k = 0, klast = -1;
+            while(nh.ok() && ori6State++ < time_6*20){
+                if(ori6State < 40){
+                    ODOM::oriNow = orientation.data = 6;
+                }
+                else    ODOM::oriNow = orientation.data = 0;
+                orientation_pub.publish(orientation);
+                k = ori6State/20;
+                if(k != klast){
+                    ROS_WARN(" \"6\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori6State/20, time_6);
+                    klast = k;
+                }
+                rate.sleep();
+            }
+            while(1){
                 //左移右移 追到線
-            // }
-            orientation.data = 0;
-            ori6State++;
+                ROS_WARN("right shift & left shift to cont. stick on line");
+                break;
+            }
+            ODOM::oriNow = orientation.data = 0;
             odometry.x = 300;
         }
+
+
+
+        // if(odometry.x >= 140 + 20 && ori6State < 600){
+        //     orientation.data = 6;
+        //     ori6State++;
+            
+        // }else if(ori6State == 600){
+        //     // while(){
+        //         //左移右移 追到線
+        //     // }
+        //     orientation.data = 0;
+        //     ori6State++;
+        //     odometry.x = 300;
+        // }
 
         //publish /cmd_ori
         orientation_pub.publish(orientation);
@@ -285,7 +311,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
                 orientation_pub.publish(orientation);
                 k = cmdori_7_times/20;
                 if(k != klast){
-                    ROS_WARN("/cmd_ori: %d, %d / %d (sec)",orientation.data ,cmdori_7_times/20, time_7);
+                    ROS_WARN(" \"7\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,cmdori_7_times/20, time_7);
                     klast = k;
                 }
                 rate.sleep();
@@ -484,9 +510,11 @@ void runInit(ros::NodeHandle& nh){
     nh.getParam("/decelerationZone",decelerationZone);
     nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);
     nh.getParam("/secondCapt",secondCapt);
-    nh.getParam("/thirdCapt",thirdCapt );
-    nh.getParam("/start_now",start_now );
-    nh.getParam("/start_togo",start_togo );
+    nh.getParam("/thirdCapt",thirdCapt);
+    nh.getParam("/start_now",start_now);
+    nh.getParam("/start_togo",start_togo);
+    nh.getParam("/time_6",time_6);
+    nh.getParam("/time_7",time_7);
 }
 
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){

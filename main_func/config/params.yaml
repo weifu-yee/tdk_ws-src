@@ -1,8 +1,12 @@
-start_now: 11
-start_togo: 12
+start_now: -1
+start_togo: 0
 oriParam: 0
 tolerence: 13.0
 decelerationZone: 30.0
 nodeLoseConpDELAY: 30
 secondCapt: 290
 thirdCapt: 400
+time_6: 2
+time_7: 2
+# time_6: 30
+# time_7: 15
