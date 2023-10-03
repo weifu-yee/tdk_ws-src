@@ -5,6 +5,7 @@
 
 namespace RESET{
     extern int state;
+    extern bool powerOn;
     // void resetCallback(const std_msgs::Bool::ConstPtr& msg);
     // void resetAll();
 }

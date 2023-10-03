@@ -70,9 +70,9 @@ int main(int argc, char **argv){
     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now,start_togo);
 
     while(nh.ok()){
-        // if(RESET::powerOn){
-        if( 0 ){
-
+        if(!RESET::powerOn){
+        // if( 0 ){
+            ROS_ERROR("Waiting for the switch on ~~~");
             continue;
         }
 
