@@ -25,7 +25,7 @@
 
 using namespace std;
 
-extern double span;
+extern double freq;
 extern double tolerence;
 extern double decelerationZone;
 extern double nodeLoseConpDELAY;

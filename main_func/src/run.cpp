@@ -70,7 +70,7 @@ int main(int argc, char **argv){
     MAP::initBuildEdge();
 
     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now,start_togo);
-    ros::Rate rate(span);
+    ros::Rate rate(freq);
 
     while(nh.ok()){
         switch(RESET::state){
@@ -110,7 +110,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ROS_INFO("---------------------------------");
     ROS_INFO("\n\nFirstLevel:\tOn %d, -> %d ; go ahead: %d\n",start_now,start_togo,ODOM::oriNow);
 
-    ros::Rate rate(span);
+    ros::Rate rate(freq);
     cam_mode.data = 1;
 
     int ori6State = 0;
@@ -221,7 +221,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
 void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     ROS_INFO("---------------------------------");
     ROS_INFO("binBaiYa");
-    ros::Rate rate(span);
+    ros::Rate rate(freq);
     
     int cmdori_7_times = 0;
     while(nh.ok() && RESET::state && MAP::nodeToGo != 14){
@@ -296,7 +296,7 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
     if(A == -2)     MAP::eraseEdge(12, 13);
     if(A == 14)     MAP::eraseEdge(14, 13);
 
-    ros::Rate rate(span);
+    ros::Rate rate(freq);
     while(nh.ok() && RESET::state && MAP::nodeNow != B){
         ros::spinOnce();
 
@@ -387,7 +387,7 @@ void SCRIPT::rotateCCW(ros::NodeHandle& nh){
         return a - 2*PI < b;
     };
 
-    ros::Rate rate(span);
+    ros::Rate rate(freq);
     while(nh.ok() && RESET::state && amoungDeg(ODOM::odometry.theta, thetaToGo)){
         ros::spinOnce();
         ODOM::oriNow = orientation.data = 4;
@@ -401,7 +401,7 @@ void SCRIPT::rotateCCW(ros::NodeHandle& nh){
     ROS_INFO("rotate_done!!");
 }
 void SCRIPT::overHurdles(ros::NodeHandle& nh, int& ori6State){
-    ros::Rate rate(span);
+    ros::Rate rate(freq);
     if(ori6State == 0 && odometry.x >= 140 + 20 && MAP::nodeNow != -1){
         int k = 0, klast = -1;
         while(nh.ok() && RESET::state && ori6State++ < time_6*20){
@@ -462,7 +462,7 @@ void SCRIPT::overHurdles(ros::NodeHandle& nh, int& ori6State){
 }
 
 void SCRIPT::testLine(ros::NodeHandle& nh){
-    ros::Rate rate(span);
+    ros::Rate rate(freq);
     int oriParam_last = -1;
     
     while(nh.ok() && RESET::state){
@@ -533,7 +533,7 @@ void runInit(ros::NodeHandle& nh){
 
     ONE.data = 1;
 
-    nh.getParam("/span",span);
+    nh.getParam("/freq",freq);
     nh.getParam("/tolerence",tolerence);
     nh.getParam("/decelerationZone",decelerationZone);
     nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);

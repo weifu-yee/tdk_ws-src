@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "comm_vel");
     ros::NodeHandle nh;
 
-    double span=0.05;
+    double span = 0.1;
     double softRate = 1;
     nh.getParam("/span",span);
     nh.getParam("/softRate",softRate);

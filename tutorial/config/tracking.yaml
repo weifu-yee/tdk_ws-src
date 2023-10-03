@@ -19,7 +19,7 @@ deceleration_minSpeed: 5
 # cmd_vel
 ori: -1
 
-V: 100
+V: 50
 vel_limit: 50
 
 # transmission fix

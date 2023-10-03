@@ -18,7 +18,7 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
     ROS_INFO("cease!!");
     CAM::cease = 1;
 
-    ros::Rate rate(span); //20Hz
+    ros::Rate rate(freq); //20Hz
     int flag = 0;
     int _a = 0, _b = 0;
     do{     //the capture and detect process

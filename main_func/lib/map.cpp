@@ -1,6 +1,6 @@
 #include "map.h"
 
-double span = 10;
+double freq = 10;
 double tolerence = 13;
 double decelerationZone = 16;
 double nodeLoseConpDELAY = 2;
