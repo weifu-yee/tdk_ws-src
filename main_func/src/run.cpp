@@ -26,6 +26,7 @@ ros::Subscriber node_sub;
 ros::Subscriber number_sub;
 ros::Subscriber odom_sub;
 ros::Subscriber stickOnLine_sub;
+ros::Subscriber reset_sub;
 //msgs
 std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
@@ -56,6 +57,7 @@ void nodeCallback(const std_msgs::Bool::ConstPtr& is_node);
 void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers);
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel);
 void stickCallback(const std_msgs::Bool::ConstPtr& sitck_);
+void reset_callback(const std_msgs::Int64::ConstPtr& reset_data);
 
 //main
 int main(int argc, char **argv){
@@ -68,17 +70,17 @@ int main(int argc, char **argv){
     MAP::initBuildEdge();
 
     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now,start_togo);
+    ros::Rate rate(20);
 
     while(nh.ok()){
-        if(!RESET::powerOn){
-        // if( 0 ){
-            ROS_ERROR("Waiting for the switch on ~~~");
-            continue;
-        }
-
         switch(RESET::state){
             case 0:
-                while(nh.ok())  ros::spinOnce();
+                while(nh.ok() && !RESET::state){
+                    ros::spinOnce();
+                    ROS_ERROR("~~~ Waiting for the switch on ~~~");
+                    rate.sleep();
+                }
+                break;
             case 1:
                 SCRIPT::firstLevel(nh);
                 ROS_WARN("**************** pass 1st Level!! ****************");
@@ -95,7 +97,7 @@ int main(int argc, char **argv){
                 ROS_WARN("**************** pass badminton!! ****************");
             default:
                 ROS_ERROR("**************** Allpass!! ****************");
-                // RESET::powerOn = 0;
+                RESET::state = 0;
                 break;
         }
     }
@@ -525,6 +527,7 @@ void runInit(ros::NodeHandle& nh){
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
     stickOnLine_sub = nh.subscribe("/stickOnLine",1,stickCallback);
+    reset_sub = nh.subscribe("/reset",1,reset_callback);
 
     ONE.data = 1;
 
@@ -560,4 +563,8 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
+}
+void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
+    RESET::state = reset_data->data;
+    cout << RESET::state << endl;
 }
