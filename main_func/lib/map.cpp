@@ -68,7 +68,12 @@ int MAP::startPointInit(int now,int togo){
     }
     
     ODOM::faceTo = 0;
-    if(togo >= 13)  ODOM::faceTo = 1;
+    if(togo > 13){
+        ODOM::faceTo = 1;
+    }
+    if(now > 14){
+        ODOM::faceTo = 3;
+    }
 
     return MAP::cmd_ori(now, togo);
 }
