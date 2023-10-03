@@ -69,18 +69,18 @@ int main(int argc, char **argv){
             while(nh.ok())  ros::spinOnce();
         case 1:
             // SCRIPT::firstLevel(nh);
-            ROS_INFO("**************** pass 1st Level!! ****************");
+            ROS_WARN("**************** pass 1st Level!! ****************");
         case 2:            
             SCRIPT::from_A_To_B(nh, -2, 13);
             // SCRIPT::binBaiYa(nh);
-            ROS_INFO("**************** pass binBaiYa!! ****************");
+            ROS_WARN("**************** pass binBaiYa!! ****************");
         case 3:
             SCRIPT::from_A_To_B(nh, 13, 14);
             SCRIPT::dustBox(nh);
-            ROS_INFO("**************** pass dustBox!! ****************");
+            ROS_WARN("**************** pass dustBox!! ****************");
         case 4:
             SCRIPT::dustBox(nh);
-            ROS_INFO("**************** pass dustBox!! ****************");
+            ROS_WARN("**************** pass dustBox!! ****************");
         default:
             break;
     }
@@ -89,8 +89,8 @@ int main(int argc, char **argv){
 
 //scripts
 void SCRIPT::firstLevel(ros::NodeHandle& nh){
-    ROS_INFO("---------------------------------");
-    ROS_INFO("\n\nFirstLevel:\tOn %d, -> %d ; go ahead: %d\n",start_now,start_togo,ODOM::oriNow);
+    ROS_WARN("---------------------------------");
+    ROS_WARN("\n\nFirstLevel:\tOn %d, -> %d ; go ahead: %d\n",start_now,start_togo,ODOM::oriNow);
 
     ros::Rate rate(20);
     int ori6State = 0;
@@ -108,12 +108,12 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
                 ODOM::oriNow = orientation.data = 4;
                 orientation_pub.publish(orientation);
                 rate.sleep();
-                ROS_INFO("rotating");
+                ROS_WARN("rotating");
             }
             rotate_ed = 1;
             ODOM::oriNow = orientation.data = 0;
             ODOM::faceTo ++;
-            ROS_INFO("rotate_done!!");
+            ROS_WARN("rotate_done!!");
         }
         //第二重製區偏移
         // while(rotate_ed && ((odometry.y >= 330 && odometry.y < 370) || (odometry.y >= 330 && odometry.y < 370))){
@@ -129,13 +129,13 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
                 odometry.x = 710;
                 odometry.y = 370;
                 secRESET = true;
-                ROS_INFO("secRESET!!");
+                ROS_WARN("secRESET!!");
                 break;
             }
 
             orientation_pub.publish(orientation);
             cmd_vel_pub.publish(cmd_vel);
-            ROS_INFO("shifting");
+            ROS_WARN("shifting");
             rate.sleep();
         }
         
@@ -144,7 +144,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         if(onNode){
             //檢查odom是否在node一定範圍內
             if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_INFO("Node misjudgment!!");
+                ROS_WARN("Node misjudgment!!");
                 onNode = false;
                 continue;
             }
@@ -162,7 +162,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             int max = -1;
             for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
             if(max == -1){
-                ROS_INFO("NoWay!!");
+                ROS_ERROR("NoWay!!");
                 return;
             }
             MAP::nodeToGo = max;
@@ -173,7 +173,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             //重製"在節點上"
             onNode = false;
 
-            ROS_INFO("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
+            ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
 
         }
 
@@ -199,9 +199,9 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         //節點補償
         if(MAP::check_onNode(MAP::nodeToGo) == 2){
             if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
-                ROS_INFO("no conp");
+                ROS_WARN("no conp");
             else nodeLoseConp = 1;
-            // ROS_INFO("nodeLoseConp");
+            // ROS_WARN("nodeLoseConp");
         }else   nodeLoseConp = 0;
         if(nodeLoseConp){            
             std_msgs::Bool ONE;
@@ -226,8 +226,8 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
 }
 void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     ros::Rate rate(20);
-    ROS_INFO("---------------------------------");
-    ROS_INFO("binBaiYa");
+    ROS_WARN("---------------------------------");
+    ROS_WARN("binBaiYa");
     MAP::nodeNow = 12;   MAP::nodeToGo = 13;
     ODOM::oriNow = orientation.data = 0;
     // while(nh.ok() && MAP::nodeToGo == 14){
@@ -237,7 +237,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
         if(onNode){
             //檢查odom是否在node一定範圍內
             if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_INFO("Node misjudgment!!");
+                ROS_WARN("Node misjudgment!!");
                 onNode = false;
                 continue;
             }
@@ -250,7 +250,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
             int max = -1;
             for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
             if(max == -1){
-                ROS_INFO("NoWay!!");
+                ROS_ERROR("NoWay!!");
                 return;
             }
             MAP::nodeToGo = max;
@@ -259,7 +259,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
             if(max != 16)   MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
             onNode = false;
 
-            ROS_INFO("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
+            ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
 
         }
 
@@ -285,9 +285,9 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
         //節點補償
         if(MAP::check_onNode(MAP::nodeToGo) == 2){
             if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
-                ROS_INFO("no conp");
+                ROS_WARN("no conp");
             else nodeLoseConp = 1;
-            // ROS_INFO("nodeLoseConp");
+            // ROS_WARN("nodeLoseConp");
         }else   nodeLoseConp = 0;
         if(nodeLoseConp){            
             std_msgs::Bool ONE;
@@ -298,8 +298,8 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     }
 }
 void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
-    ROS_INFO("---------------------------------");
-    ROS_INFO("from %d To %d",A,B);
+    ROS_WARN("---------------------------------");
+    ROS_WARN("from %d To %d",A,B);
     ODOM::oriNow = orientation.data = MAP::startPointInit(A,B);
     if(A == -2)     MAP::eraseEdge(12, 13);
 
@@ -311,7 +311,7 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
         if(onNode){
             //檢查odom是否在node一定範圍內
             if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_INFO("Node misjudgment!!");
+                ROS_WARN("Node misjudgment!!");
                 onNode = false;
                 continue;
             }
@@ -324,7 +324,7 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
             int max = -1;
             for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
             if(max == -1){
-                ROS_INFO("NoWay!!");
+                ROS_ERROR("NoWay!!");
                 return;
             }
             MAP::nodeToGo = max;
@@ -335,7 +335,7 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
             //重製"在節點上"
             onNode = false;
 
-            ROS_INFO("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
+            ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
 
         }
 
@@ -345,7 +345,7 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
         //節點補償
         if(MAP::check_onNode(MAP::nodeToGo) == 2){
             if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
-                ROS_INFO("no nodeLoseConp");
+                ROS_WARN("no nodeLoseConp");
             else nodeLoseConp = 1;
         }else   nodeLoseConp = 0;
         if(nodeLoseConp){            
@@ -450,7 +450,7 @@ void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
     bool isNode = is_node->data;
     if(isNode != isNodeLast && isNode){
         onNode = true;
-        // ROS_INFO("(%.1lf, %.1lf, %.1lf) faceTo: %d",odometry.x, odometry.y, odometry.theta, orientation.data);
+        // ROS_WARN("(%.1lf, %.1lf, %.1lf) faceTo: %d",odometry.x, odometry.y, odometry.theta, orientation.data);
     }
     isNodeLast = isNode;
 }
