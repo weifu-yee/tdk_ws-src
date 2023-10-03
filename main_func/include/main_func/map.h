@@ -40,6 +40,7 @@ namespace MAP{
     int cmd_ori(int u, int v);
     int disToOdom(int u);
     int check_onNode(int u);
+    bool nodeLoseConp();
 }
 
 using namespace MAP;

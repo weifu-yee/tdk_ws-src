@@ -153,7 +153,7 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(debug src/debug.cpp)
+add_executable(debug debug/debug.cpp)
 target_link_libraries(debug ${catkin_LIBRARIES})
 
 add_executable(navi_tracking src/navi_tracking.cpp)

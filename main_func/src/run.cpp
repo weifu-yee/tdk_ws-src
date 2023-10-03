@@ -29,6 +29,7 @@ geometry_msgs::Twist cmd_vel;
 std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
 geometry_msgs::Twist rotate_ang;
+std_msgs::Bool ONE;
 
 //scripts
 namespace SCRIPT{
@@ -37,6 +38,7 @@ namespace SCRIPT{
     void dustBox(ros::NodeHandle& nh);
     void badminton(ros::NodeHandle& nh);
     
+    void rotateCCW(ros::NodeHandle& nh);
     void from_A_To_B(ros::NodeHandle& nh, int A, int B);
 
     void testLine(ros::NodeHandle& nh);
@@ -111,22 +113,30 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         cam_pub.publish(cam_mode);
         ros::spinOnce();
 
+        
+        
+        // if(MAP::nodeNow == 12 && !rotate_ed){
+        //     while(nh.ok() && odometry.theta < PI/2){
+        //     //逆時針轉90度
+        //         ros::spinOnce();
+        //         ODOM::oriNow = orientation.data = 4;
+        //         orientation_pub.publish(orientation);
+        //         rate.sleep();
+        //         ROS_WARN("rotating");
+        //     }
+        //     rotate_ed = 1;
+        //     ODOM::oriNow = orientation.data = 0;
+        //     ODOM::faceTo ++;
+        //     ROS_WARN("rotate_done!!");
+        // }
+
+        //逆時針轉90度
         if(MAP::nodeNow == 12 && !rotate_ed){
-            while(nh.ok() && odometry.theta < PI/2){
-            //逆時針轉90度
-                ros::spinOnce();
-                ODOM::oriNow = orientation.data = 4;
-                orientation_pub.publish(orientation);
-                rate.sleep();
-                ROS_WARN("rotating");
-            }
+            SCRIPT::rotateCCW(nh);
             rotate_ed = 1;
-            ODOM::oriNow = orientation.data = 0;
-            ODOM::faceTo ++;
-            ROS_WARN("rotate_done!!");
         }
+
         //第二重製區偏移
-        // while(rotate_ed && ((odometry.y >= 330 && odometry.y < 370) || (odometry.y >= 330 && odometry.y < 370))){
         while(rotate_ed && (odometry.x < 710 || odometry.y < 370)){
             ros::spinOnce();
             ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
@@ -215,43 +225,19 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
             odometry.x = 300;
         }
 
-
-
-        // if(odometry.x >= 140 + 20 && ori6State < 600){
-        //     orientation.data = 6;
-        //     ori6State++;
-            
-        // }else if(ori6State == 600){
-        //     // while(){
-        //         //左移右移 追到線
-        //     // }
-        //     orientation.data = 0;
-        //     ori6State++;
-        //     odometry.x = 300;
-        // }
-
         //publish /cmd_ori
         orientation_pub.publish(orientation);
 
         //節點補償
-        if(MAP::check_onNode(MAP::nodeToGo) == 2){
-            if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
-                ROS_WARN("no conp");
-            else nodeLoseConp = 1;
-            // ROS_WARN("nodeLoseConp");
-        }else   nodeLoseConp = 0;
-        if(nodeLoseConp){            
-            std_msgs::Bool ONE;
-            ONE.data = 1;
-            node_detect_pub.publish(ONE);
-        }
+        if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
 
         //第二次辨識
         if(odometry.x >= secondCapt && capt_ed_times == 1){
             CAM::capture_n_detect(4, cam_pub, orientation_pub, nh);
             capt_ed_times++;
-        }//第三次辨識
-        else if(odometry.x >= thirdCapt && MAP::nodeNow > 3 && capt_ed_times == 2){
+        }
+        //第三次辨識
+        if(odometry.x >= thirdCapt && MAP::nodeNow > 3 && capt_ed_times == 2){
             CAM::capture_n_detect(7, cam_pub, orientation_pub, nh);
             capt_ed_times++;
             cam_mode.data = 2;
@@ -323,16 +309,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
         if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
 
         //節點補償
-        if(MAP::check_onNode(MAP::nodeToGo) == 2){
-            if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
-                ROS_WARN("no nodeLoseConp");
-            else nodeLoseConp = 1;
-        }else   nodeLoseConp = 0;
-        if(nodeLoseConp){            
-            std_msgs::Bool ONE;
-            ONE.data = 1;
-            node_detect_pub.publish(ONE);
-        }
+        if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
         
         //publish /cmd_ori
         orientation_pub.publish(orientation);
@@ -389,16 +366,7 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
         if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
 
         //節點補償
-        if(MAP::check_onNode(MAP::nodeToGo) == 2){
-            if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
-                ROS_WARN("no nodeLoseConp");
-            else nodeLoseConp = 1;
-        }else   nodeLoseConp = 0;
-        if(nodeLoseConp){            
-            std_msgs::Bool ONE;
-            ONE.data = 1;
-            node_detect_pub.publish(ONE);
-        }
+        if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
         
         //publish /cmd_ori
         orientation_pub.publish(orientation);
@@ -438,6 +406,30 @@ void SCRIPT::badminton(ros::NodeHandle& nh){
     //do the script of badminton
     ROS_WARN("badminton -- upper & lowerSTM");
 }
+void SCRIPT::rotateCCW(ros::NodeHandle& nh){
+    double degrees[] = {0, PI/2, PI, -PI/2};
+    double thetaToGo = degrees[(ODOM::faceTo + 1) % 4];
+    ROS_WARN("---------------------------------");
+    ROS_WARN("SCRIPT::rotateCCW, faceTo: %f -> %f",degrees[ODOM::faceTo],thetaToGo);
+    auto amoungDeg = [&](double a, double b){
+        if(b >= 0)  return a < b;
+        return a - 2*PI < b;
+    };
+
+    ros::Rate rate(20);
+    while(nh.ok() && amoungDeg(ODOM::odometry.theta, thetaToGo)){
+        ros::spinOnce();
+        ODOM::oriNow = orientation.data = 4;
+        orientation_pub.publish(orientation);
+        rate.sleep();
+    }
+    // rotate_ed = 1;
+    ODOM::odometry.theta = thetaToGo;
+    // ODOM::oriNow = orientation.data = 0;
+    ODOM::faceTo ++;    ODOM::faceTo %= 4;
+    ROS_WARN("rotate_done!!");
+}
+
 void SCRIPT::testLine(ros::NodeHandle& nh){
     ros::Rate rate(20);
     int oriParam_last = -1;
@@ -505,6 +497,8 @@ void runInit(ros::NodeHandle& nh){
     // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
+
+    ONE.data = 1;
 
     nh.getParam("/tolerence",tolerence);
     nh.getParam("/decelerationZone",decelerationZone);
