@@ -115,7 +115,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     int ori6State = 0;
     if(MAP::nodeNow > 3 || MAP::nodeNow == -2)    ori6State = time_6*20;
     bool secRESET = false;
-    while(nh.ok() && !secRESET){
+    while(nh.ok() && RESET::state && !secRESET){
         // std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
         cam_pub.publish(cam_mode);
         ros::spinOnce();
@@ -223,7 +223,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
     ros::Rate rate(20);
     
     int cmdori_7_times = 0;
-    while(nh.ok() && MAP::nodeToGo != 14){
+    while(nh.ok() && RESET::state && MAP::nodeToGo != 14){
         ros::spinOnce();
         //在node上
         if(onNode){
@@ -259,7 +259,7 @@ void SCRIPT::binBaiYa(ros::NodeHandle& nh){
 
         if(MAP::nodeNow == 16 && cmdori_7_times == 0){
             int k = 0, klast = -1;
-            while(nh.ok() && cmdori_7_times++ < time_7*20){
+            while(nh.ok() && RESET::state && cmdori_7_times++ < time_7*20){
                 if(cmdori_7_times < 40){
                     orientation.data = 7;
                 }
@@ -296,7 +296,7 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
     if(A == 14)     MAP::eraseEdge(14, 13);
 
     ros::Rate rate(20);
-    while(nh.ok() && MAP::nodeNow != B){
+    while(nh.ok() && RESET::state && MAP::nodeNow != B){
         ros::spinOnce();
 
         //在node上
@@ -387,7 +387,7 @@ void SCRIPT::rotateCCW(ros::NodeHandle& nh){
     };
 
     ros::Rate rate(20);
-    while(nh.ok() && amoungDeg(ODOM::odometry.theta, thetaToGo)){
+    while(nh.ok() && RESET::state && amoungDeg(ODOM::odometry.theta, thetaToGo)){
         ros::spinOnce();
         ODOM::oriNow = orientation.data = 4;
         orientation_pub.publish(orientation);
@@ -403,11 +403,12 @@ void SCRIPT::overHurdles(ros::NodeHandle& nh, int& ori6State){
     ros::Rate rate(20);
     if(ori6State == 0 && odometry.x >= 140 + 20 && MAP::nodeNow != -1){
         int k = 0, klast = -1;
-        while(nh.ok() && ori6State++ < time_6*20){
+        while(nh.ok() && RESET::state && ori6State++ < time_6*20){
             if(ori6State < 40){
                 ODOM::oriNow = orientation.data = 6;
             }
-            else    ODOM::oriNow = orientation.data = 0;
+            // else    ODOM::oriNow = orientation.data = 0;
+            else    ODOM::oriNow = orientation.data = 6;
             orientation_pub.publish(orientation);
             k = ori6State/20;
             if(k != klast){
@@ -463,7 +464,7 @@ void SCRIPT::testLine(ros::NodeHandle& nh){
     ros::Rate rate(20);
     int oriParam_last = -1;
     
-    while(nh.ok()){
+    while(nh.ok() && RESET::state){
         ros::spinOnce();
         int oriParam = 0;
 
@@ -522,8 +523,8 @@ void runInit(ros::NodeHandle& nh){
     node_sub = nh.subscribe("/node_detect",1,nodeCallback);
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
     number_sub = nh.subscribe("/numbers",1,numberCallback);
-    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
-    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
+    // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
+    odom_sub = nh.subscribe("/realspeed",1,odomCallback);
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
     stickOnLine_sub = nh.subscribe("/stickOnLine",1,stickCallback);
@@ -559,6 +560,8 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
+    if(CAM::cease)  return;
+    if(!RESET::state)   return;
     ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){

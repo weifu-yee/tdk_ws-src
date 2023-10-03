@@ -129,9 +129,9 @@ int MAP::check_onNode(int u){
 }
 bool MAP::nodeLoseConp(){
     if(MAP::check_onNode(MAP::nodeToGo) != 2)   return 0;
-    if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7){
-        ROS_WARN("no conp");
-        return 0;
-    }
+    // if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7){
+    //     // ROS_WARN("no conp");
+    //     return 0;
+    // }
     return 1;
 }

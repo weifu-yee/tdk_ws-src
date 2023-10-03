@@ -1,6 +1,8 @@
 #include "cam.h"
 #include "odom.h"
+
 set<int> CAM::numbers;
+bool CAM::cease = 0;
 
 double secondCapt = 300;
 double thirdCapt = 430;
@@ -14,6 +16,7 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
     cease.data = -1;
 
     ROS_WARN("cease!!");
+    CAM::cease = 1;
 
     ros::Rate rate(20); //20Hz
     int flag = 0;
@@ -45,6 +48,7 @@ void CAM::capture_n_detect(int op, ros::Publisher& cam_pub,
         rate.sleep();
     }while(!flag && nh.ok());
     what_to_erase(_a, _b);
+    CAM::cease = 0;
 }
 void CAM::what_to_erase(int a, int b){
     auto eraseBox = [&](int u){
