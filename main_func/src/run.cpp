@@ -41,6 +41,7 @@ namespace SCRIPT{
     void dustBox(ros::NodeHandle& nh);
     void badminton(ros::NodeHandle& nh);
     
+    void overHurdles(ros::NodeHandle& nh, int& ori6State);
     void rotateCCW(ros::NodeHandle& nh);
     void from_A_To_B(ros::NodeHandle& nh, int A, int B);
 
@@ -110,6 +111,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     cam_mode.data = 1;
 
     int ori6State = 0;
+    if(MAP::nodeNow > 3 || MAP::nodeNow == -2)    ori6State = time_6*20;
     bool secRESET = false;
     while(nh.ok() && !secRESET){
         // std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
@@ -157,62 +159,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
 
         //跨坎劇本
-        if(odometry.x >= 140 + 20 && MAP::nodeNow != -1 && ori6State == 0){
-            int k = 0, klast = -1;
-            while(nh.ok() && ori6State++ < time_6*20){
-                if(ori6State < 40){
-                    ODOM::oriNow = orientation.data = 6;
-                }
-                else    ODOM::oriNow = orientation.data = 0;
-                orientation_pub.publish(orientation);
-                k = ori6State/20;
-                if(k != klast){
-                    ROS_WARN(" \"6\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori6State/20, time_6);
-                    klast = k;
-                }
-                rate.sleep();
-            }
-
-            //左移右移 追到線
-            ROS_WARN("---------------------------------");
-            ROS_WARN("right shift & left shift to cont. stick on line");
-            int after_6_shift_state = 0;
-            while(1){
-                ros::spinOnce();
-                ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-                if(after_6_shift_state == 0){
-                    if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
-                        cmd_vel.linear.y = -15;
-                    }else{
-                        after_6_shift_state ++;
-                        ROS_WARN("switch");
-                    }
-                }else if(after_6_shift_state == 1){
-                    if(ODOM::odometry.y < MAP::node[MAP::nodeNow].second.second + after_6_shift){
-                        cmd_vel.linear.y = 15;
-                    }else{
-                        after_6_shift_state ++;
-                        ROS_WARN("switch");
-                    }
-                }else{
-                    ROS_ERROR("can't stick the line ... QQ");
-                    break;
-                }
-
-                if(stick){
-                    ROS_WARN("stick on the line!!");
-                    break;
-                }
-
-                orientation_pub.publish(orientation);
-                cmd_vel_pub.publish(cmd_vel);
-                rate.sleep();
-            }
-
-            ODOM::oriNow = orientation.data = 0;
-            ODOM::odometry.y = MAP::node[MAP::nodeNow].second.second;
-            ODOM::odometry.x = 300;
-        }
+        SCRIPT::overHurdles(nh, ori6State);
 
         //publish /cmd_ori
         orientation_pub.publish(orientation);
@@ -242,7 +189,7 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
                     odometry.x = 710;
                     odometry.y = 370;
                     secRESET = true;
-                    ROS_WARN("secRESET!!");
+                    ROS_WARN("secRESET done!!");
                     break;
                 }
 
@@ -449,6 +396,65 @@ void SCRIPT::rotateCCW(ros::NodeHandle& nh){
     // ODOM::oriNow = orientation.data = 0;
     ODOM::faceTo ++;    ODOM::faceTo %= 4;
     ROS_WARN("rotate_done!!");
+}
+void SCRIPT::overHurdles(ros::NodeHandle& nh, int& ori6State){
+    ros::Rate rate(20);
+    if(ori6State == 0 && odometry.x >= 140 + 20 && MAP::nodeNow != -1){
+        int k = 0, klast = -1;
+        while(nh.ok() && ori6State++ < time_6*20){
+            if(ori6State < 40){
+                ODOM::oriNow = orientation.data = 6;
+            }
+            else    ODOM::oriNow = orientation.data = 0;
+            orientation_pub.publish(orientation);
+            k = ori6State/20;
+            if(k != klast){
+                ROS_WARN(" \"6\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori6State/20, time_6);
+                klast = k;
+            }
+            rate.sleep();
+        }
+
+        //左移右移 追到線
+        ROS_WARN("---------------------------------");
+        ROS_WARN("right shift & left shift to cont. stick on line");
+        int after_6_shift_state = 0;
+        while(1){
+            ros::spinOnce();
+            ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+            if(after_6_shift_state == 0){
+                if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
+                    cmd_vel.linear.y = -15;
+                }else{
+                    after_6_shift_state ++;
+                    ROS_WARN("switch");
+                }
+            }else if(after_6_shift_state == 1){
+                if(ODOM::odometry.y < MAP::node[MAP::nodeNow].second.second + after_6_shift){
+                    cmd_vel.linear.y = 15;
+                }else{
+                    after_6_shift_state ++;
+                    ROS_WARN("switch");
+                }
+            }else{
+                ROS_ERROR("can't stick the line ... QQ");
+                break;
+            }
+
+            if(stick){
+                ROS_WARN("stick on the line!!");
+                break;
+            }
+
+            orientation_pub.publish(orientation);
+            cmd_vel_pub.publish(cmd_vel);
+            rate.sleep();
+        }
+
+        ODOM::oriNow = orientation.data = 0;
+        ODOM::odometry.y = MAP::node[MAP::nodeNow].second.second;
+        ODOM::odometry.x = 300;
+    }
 }
 
 void SCRIPT::testLine(ros::NodeHandle& nh){
