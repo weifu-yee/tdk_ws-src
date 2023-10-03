@@ -61,29 +61,37 @@ int main(int argc, char **argv){
     MAP::buildNode();
     MAP::initBuildEdge();
 
-    // orientation.data = 0;   //front
-    cam_mode.data = 1;
     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now,start_togo);
 
-    switch(RESET::state){
-        case 0:
-            while(nh.ok())  ros::spinOnce();
-        case 1:
-            // SCRIPT::firstLevel(nh);
-            ROS_WARN("**************** pass 1st Level!! ****************");
-        case 2:            
-            SCRIPT::from_A_To_B(nh, -2, 13);
-            SCRIPT::binBaiYa(nh);
-            ROS_WARN("**************** pass binBaiYa!! ****************");
-        case 3:
-            SCRIPT::from_A_To_B(nh, 13, 14);
-            SCRIPT::dustBox(nh);
-            ROS_WARN("**************** pass dustBox!! ****************");
-        case 4:
-            SCRIPT::badminton(nh);
-            ROS_WARN("**************** pass badminton!! ****************");
-        default:
-            break;
+    while(nh.ok()){
+        // if(RESET::powerOn){
+        if( 0 ){
+
+            continue;
+        }
+
+        switch(RESET::state){
+            case 0:
+                while(nh.ok())  ros::spinOnce();
+            case 1:
+                // SCRIPT::firstLevel(nh);
+                ROS_WARN("**************** pass 1st Level!! ****************");
+            case 2:            
+                // SCRIPT::from_A_To_B(nh, -2, 13);
+                // SCRIPT::binBaiYa(nh);
+                ROS_WARN("**************** pass binBaiYa!! ****************");
+            case 3:
+                SCRIPT::from_A_To_B(nh, 13, 14);
+                SCRIPT::dustBox(nh);
+                ROS_WARN("**************** pass dustBox!! ****************");
+            case 4:
+                SCRIPT::badminton(nh);
+                ROS_WARN("**************** pass badminton!! ****************");
+            default:
+                ROS_ERROR("**************** Allpass!! ****************");
+                // RESET::powerOn = 0;
+                break;
+        }
     }
     return 0;
 }
@@ -94,6 +102,8 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
     ROS_WARN("\n\nFirstLevel:\tOn %d, -> %d ; go ahead: %d\n",start_now,start_togo,ODOM::oriNow);
 
     ros::Rate rate(20);
+    cam_mode.data = 1;
+
     int ori6State = 0;
     bool secRESET = false;
     // while(nh.ok() && MAP::nodeNow < 13){
@@ -310,9 +320,10 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
     ROS_WARN("SCRIPT::from_%d_To_%d",A,B);
     ODOM::oriNow = orientation.data = MAP::startPointInit(A,B);
     if(A == -2)     MAP::eraseEdge(12, 13);
+    if(A == 14)     MAP::eraseEdge(14, 13);
 
     ros::Rate rate(20);
-    while(nh.ok() && MAP::nodeNow < B){
+    while(nh.ok() && MAP::nodeNow != B){
         ros::spinOnce();
 
         //在node上
@@ -339,14 +350,13 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
             //發布方向
             ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
             //刪除來的路徑
-            if(max != 16){
+            if(max != 16 && max != 17){
                 MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
             }
             //重製"在節點上"
             onNode = false;
 
             ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
-
         }
 
         //靠近node時減速
@@ -375,85 +385,32 @@ void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
 void SCRIPT::dustBox(ros::NodeHandle& nh){
     ROS_WARN("---------------------------------");
     ROS_WARN("binBaiYa");
-    ros::Rate rate(20);
-    
-    int cmdori_7_times = 0;
-    while(nh.ok() && MAP::nodeToGo != 15){
-        cmd_laji.data = 1;
-        laji_pub.publish(cmd_laji);
 
-        ros::spinOnce();
-        //在node上
-        if(onNode){
-            //檢查odom是否在node一定範圍內
-            if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_WARN("Node misjudgment!!");
-                onNode = false;
-                continue;
-            }
-            //更新現在的node
-            MAP::nodeNow = MAP::nodeToGo;
-            odometry.x = MAP::node[MAP::nodeNow].second.first;
-            odometry.y = MAP::node[MAP::nodeNow].second.second;
-            //更新要去的node
-            auto arr = MAP::adj_list[MAP::nodeNow];
-            int max = -1;
-            for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
-            if(max == -1){
-                ROS_ERROR("NoWay!!");
-                return;
-            }
-            MAP::nodeToGo = max;
+    //Go left to get balls
+    SCRIPT::from_A_To_B(nh, 14, 17);
 
-            //發布方向
-            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
-            //刪除來的路徑
-            MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
-            //重製"在節點上"
-            onNode = false;
+    //do the script of dustBox
+    ROS_WARN("---------------------------------");
+    ROS_WARN("dustBox -- upper & lowerSTM");
+    // cmd_laji.data = 1;
+    // laji_pub.publish(cmd_laji);
 
-            ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
-        }
+    //Go Back to 14 and shoot
+    SCRIPT::from_A_To_B(nh, 17, 14);
 
-        if(MAP::nodeNow == 16 && cmdori_7_times == 0){
-            int k = 0, klast = -1;
-            while(nh.ok() && cmdori_7_times++ < time_7*20){
-                if(cmdori_7_times < 40){
-                    orientation.data = 7;
-                }
-                else    orientation.data = -1;
-                orientation_pub.publish(orientation);
-                k = cmdori_7_times/20;
-                if(k != klast){
-                    ROS_WARN("/cmd_ori: %d, %d / %d (sec)",orientation.data ,cmdori_7_times/20, time_7);
-                    klast = k;
-                }
-                rate.sleep();
-            }
-            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
-        }
+    //shoot
+    ROS_WARN("---------------------------------");
+    ROS_WARN("shoot -- upperSTM");
+}
+void SCRIPT::badminton(ros::NodeHandle& nh){
+    ROS_WARN("---------------------------------");
+    ROS_WARN("SCRIPT::badminton");
 
-        //靠近node時減速
-        if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
+    //Go ahead to the badminton platform
+    SCRIPT::from_A_To_B(nh, 14, 15);
 
-        //節點補償
-        if(MAP::check_onNode(MAP::nodeToGo) == 2){
-            if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7)
-                ROS_WARN("no nodeLoseConp");
-            else nodeLoseConp = 1;
-        }else   nodeLoseConp = 0;
-        if(nodeLoseConp){            
-            std_msgs::Bool ONE;
-            ONE.data = 1;
-            node_detect_pub.publish(ONE);
-        }
-        
-        //publish /cmd_ori
-        orientation_pub.publish(orientation);
-
-        //20Hz
-        rate.sleep();
-    }
+    //do the script of badminton
+    ROS_WARN("badminton -- upper & lowerSTM");
 }
 void SCRIPT::testLine(ros::NodeHandle& nh){
     ros::Rate rate(20);
