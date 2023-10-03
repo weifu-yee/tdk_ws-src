@@ -19,9 +19,9 @@
 
 #include "cam.h"
 #include "odom.h"
-#define buildNodeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/buildNode.yaml"
-#define initBuildEdgeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/initBuildEdge.yaml"
-#define num_of_nodes 17
+#define buildNodeFilePath "/root/tdk_ws/src/main_func/params/buildNode.yaml"
+#define initBuildEdgeFilePath "/root/tdk_ws/src/main_func/params/initBuildEdge.yaml"
+#define num_of_nodes 18
 
 using namespace std;
 
@@ -40,6 +40,7 @@ namespace MAP{
     int cmd_ori(int u, int v);
     int disToOdom(int u);
     int check_onNode(int u);
+    bool nodeLoseConp();
 }
 
 using namespace MAP;

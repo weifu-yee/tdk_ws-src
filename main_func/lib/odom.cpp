@@ -9,7 +9,6 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
     dt = (current_time - last_time).toSec();
     if(std::abs(dt) > 1)  dt = 0;
 
-
     double x_car, y_car;
     if(ODOM::oriNow >= 10 || ODOM::oriNow % 2 == 0)
         x_car = ins_vel->linear.x * (dt);
@@ -23,11 +22,10 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
     x += xMat[i] * x_car + yMat[i] * y_car;
     y += xMat[j] * x_car + yMat[j] * y_car;
 
-
     if(ODOM::oriNow == 4 || ODOM::oriNow == 5)
         theta += ins_vel->angular.z * (dt);
-    while(theta > PI)  theta -= 2*PI;        
-    while(theta < -PI) theta += 2*PI;
+    while(theta > PI)  theta -= 2*PI;
+    while(theta <= -PI) theta += 2*PI;
     last_time = current_time;
     return;
 }

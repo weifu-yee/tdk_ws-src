@@ -5,8 +5,8 @@
 
 namespace RESET{
     extern int state;
-    // void resetCallback(const std_msgs::Bool::ConstPtr& msg);
-    // void resetAll();
+    bool resetRisingEdge();
 }
+
 
 #endif

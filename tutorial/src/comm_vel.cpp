@@ -56,22 +56,9 @@ int main(int argc, char **argv)
         nh.getParam("/deceleration_coeff",deceleration_coeff);
         nh.getParam("/deceleration_minSpeed",deceleration_minSpeed);
 
-        // if(fabs(vel.linear.x - vel_last.linear.x) > softRate){
-        //     vel.linear.x = vel_last.linear.x + (vel.linear.x > vel_last.linear.x)?softRate:-softRate;
-        //     vel_last.linear.x = vel.linear.x;
-        // }
-        // if(fabs(vel.linear.y - vel_last.linear.y) > softRate){
-        //     vel.linear.y = vel_last.linear.y + (vel.linear.y > vel_last.linear.y)?softRate:-softRate;
-        //     vel_last.linear.y = vel.linear.y;
-        // }
-        // if(fabs(vel.angular.z - vel_last.angular.z) > softRate){
-        //     vel.angular.z = vel_last.angular.z + (vel.angular.z > vel_last.angular.z)?softRate:-softRate;
-        //     vel_last.angular.z = vel.angular.z;
-        // }
 
         vel.linear.x = softRate * vel_last.linear.x + (1 - softRate) * vel.linear.x;
         vel.linear.y = softRate * vel_last.linear.y + (1 - softRate) * vel.linear.y;
-        // vel.angular.z = softRate * vel_last.angular.z + (1 - softRate) * vel.angular.z;
 
         vel_last.linear.x = vel.linear.x;
         vel_last.linear.y = vel.linear.y;

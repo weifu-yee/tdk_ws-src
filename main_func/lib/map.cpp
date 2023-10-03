@@ -55,12 +55,15 @@ void MAP::initBuildEdge(){
 int MAP::startPointInit(int now,int togo){
     MAP::nodeNow = now;
     MAP::nodeToGo = togo;
-    if(now != -1){
-        ODOM::odometry.x = MAP::node[now].second.first;
-        ODOM::odometry.y = MAP::node[now].second.second;
-    }else{
+    if(now == -1){
         ODOM::odometry.x = 60;
         ODOM::odometry.y = 180;
+    }else if(now == -2){
+        ODOM::odometry.x = 710;
+        ODOM::odometry.y = 370;
+    }else{
+        ODOM::odometry.x = MAP::node[now].second.first;
+        ODOM::odometry.y = MAP::node[now].second.second;
     }
     
     ODOM::faceTo = 0;
@@ -69,7 +72,7 @@ int MAP::startPointInit(int now,int togo){
     return MAP::cmd_ori(now, togo);
 }
 void MAP::eraseEdge(int u, int v){
-    if(v == -1)  return;
+    if(u == -1)  return;
     auto find_n_erase = [&](int x, int y){
         MAP::adj_list[x].erase(y);
     };
@@ -77,8 +80,9 @@ void MAP::eraseEdge(int u, int v){
     find_n_erase(v,u);
 }
 int MAP::cmd_ori(int u, int v){
-    if(v == -1)  return 0;
-    if(u == 13 && v == 12)  return 0;
+    if(u == -1)  return 0;
+    if(u == -2)  return 0;
+    if(u == 12 && v == 13)  return 0;
     double ux = MAP::node[u].second.first;
     double uy = MAP::node[u].second.second;
     double vx = MAP::node[v].second.first;
@@ -121,5 +125,13 @@ int MAP::check_onNode(int u){
     if(disNow < (x_diff + y_diff - tolerence))    return 0;
     if(disNow > (x_diff + y_diff + nodeLoseConpDELAY))    return 2;
     
+    return 1;
+}
+bool MAP::nodeLoseConp(){
+    if(MAP::check_onNode(MAP::nodeToGo) != 2)   return 0;
+    if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7){
+        ROS_WARN("no conp");
+        return 0;
+    }
     return 1;
 }
