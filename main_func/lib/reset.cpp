@@ -1,6 +1,7 @@
 #include "reset.h"
 
-int RESET::state = 0;
+int RESET::state = 1;
+// int RESET::state = 0;
 int stateLast = 0;
 
 bool RESET::resetRisingEdge(){
