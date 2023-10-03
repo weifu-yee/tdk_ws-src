@@ -21,6 +21,7 @@ double slowMS = 0;
 int oriSub_ed = -1;
 int ori=-1, prev_ori = -1;
 std_msgs::Bool node_point;
+std_msgs::Bool stick;
 
 bool PID_mode, EX_mode;
 double V = 0, vel_limit = 0;
@@ -175,6 +176,7 @@ int main(int argc, char** argv) {
     Tracker tracker(nh);
     ros::Publisher pub_node = nh.advertise<std_msgs::Bool>("node_detect", 10);;   //map
     ros::Publisher pub_vel = nh.advertise<geometry_msgs::Twist>("vel",10);
+    ros::Publisher pub_stickOnLine = nh.advertise<std_msgs::Bool>("stickOnLine", 10);
 
     double span=0.05;
     
@@ -239,7 +241,11 @@ int main(int argc, char** argv) {
                 u_theta = 0;
                 VX = -u_d*sin(((double)ori)*0.5*pi);
                 VY = u_d*cos(((double)ori)*0.5*pi);
+
+                stick.data = 0;
                 // ROS_INFO("overshoot: prev_ori = %d , ori = %d; u_d: %.3lf, VX: %.3lf, VY: %.3lf",prev_ori,ori,u_d,VX,VY);
+            }else{
+                stick.data = 1;
             }
 //
 
@@ -263,6 +269,7 @@ int main(int argc, char** argv) {
 
             pub_node.publish(node_point);
             pub_vel.publish(vel);
+            pub_stickOnLine.publish(stick);
         }
         last_ori = ori;
         ros::Duration(span).sleep();

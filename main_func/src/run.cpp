@@ -13,6 +13,8 @@ bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 bool rotate_ed = 0;
 int time_6 = 30, time_7 = 15;
+double after_6_shift = 40;
+bool stick = 0;
 //publisher
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
@@ -23,6 +25,7 @@ ros::Publisher laji_pub;
 ros::Subscriber node_sub;
 ros::Subscriber number_sub;
 ros::Subscriber odom_sub;
+ros::Subscriber stickOnLine_sub;
 //msgs
 std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
@@ -51,6 +54,7 @@ void runInit(ros::NodeHandle& nh);
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node);
 void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers);
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel);
+void stickCallback(const std_msgs::Bool::ConstPtr& sitck_);
 
 //main
 int main(int argc, char **argv){
@@ -107,64 +111,16 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
 
     int ori6State = 0;
     bool secRESET = false;
-    // while(nh.ok() && MAP::nodeNow < 13){
     while(nh.ok() && !secRESET){
         // std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
         cam_pub.publish(cam_mode);
         ros::spinOnce();
 
-        
-        
-        // if(MAP::nodeNow == 12 && !rotate_ed){
-        //     while(nh.ok() && odometry.theta < PI/2){
-        //     //逆時針轉90度
-        //         ros::spinOnce();
-        //         ODOM::oriNow = orientation.data = 4;
-        //         orientation_pub.publish(orientation);
-        //         rate.sleep();
-        //         ROS_WARN("rotating");
-        //     }
-        //     rotate_ed = 1;
-        //     ODOM::oriNow = orientation.data = 0;
-        //     ODOM::faceTo ++;
-        //     ROS_WARN("rotate_done!!");
-        // }
-
-        //逆時針轉90度
-        if(MAP::nodeNow == 12 && !rotate_ed){
-            SCRIPT::rotateCCW(nh);
-            rotate_ed = 1;
-        }
-
-        //第二重製區偏移
-        while(rotate_ed && (odometry.x < 710 || odometry.y < 370)){
-            ros::spinOnce();
-            ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-            if(odometry.x < 710)    cmd_vel.linear.y = -2;
-            else    cmd_vel.linear.y = 0;
-            if(odometry.y < 370)    cmd_vel.linear.x = 15;
-            else    cmd_vel.linear.x = 0;
-
-            if(odometry.x >= 710 && odometry.y >= 370){
-                odometry.x = 710;
-                odometry.y = 370;
-                secRESET = true;
-                ROS_WARN("secRESET!!");
-                break;
-            }
-
-            orientation_pub.publish(orientation);
-            cmd_vel_pub.publish(cmd_vel);
-            ROS_WARN("shifting");
-            rate.sleep();
-        }
-        
-        
         //在node上
         if(onNode){
             //檢查odom是否在node一定範圍內
             if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_WARN("Node misjudgment!!");
+                ROS_ERROR("Node misjudgment!!");
                 onNode = false;
                 continue;
             }
@@ -216,13 +172,46 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
                 }
                 rate.sleep();
             }
+
+            //左移右移 追到線
+            ROS_WARN("---------------------------------");
+            ROS_WARN("right shift & left shift to cont. stick on line");
+            int after_6_shift_state = 0;
             while(1){
-                //左移右移 追到線
-                ROS_WARN("right shift & left shift to cont. stick on line");
-                break;
+                ros::spinOnce();
+                ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                if(after_6_shift_state == 0){
+                    if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
+                        cmd_vel.linear.y = -15;
+                    }else{
+                        after_6_shift_state ++;
+                        ROS_WARN("switch");
+                    }
+                }else if(after_6_shift_state == 1){
+                    if(ODOM::odometry.y < MAP::node[MAP::nodeNow].second.second + after_6_shift){
+                        cmd_vel.linear.y = 15;
+                    }else{
+                        after_6_shift_state ++;
+                        ROS_WARN("switch");
+                    }
+                }else{
+                    ROS_ERROR("can't stick the line ... QQ");
+                    break;
+                }
+
+                if(stick){
+                    ROS_WARN("stick on the line!!");
+                    break;
+                }
+
+                orientation_pub.publish(orientation);
+                cmd_vel_pub.publish(cmd_vel);
+                rate.sleep();
             }
+
             ODOM::oriNow = orientation.data = 0;
-            odometry.x = 300;
+            ODOM::odometry.y = MAP::node[MAP::nodeNow].second.second;
+            ODOM::odometry.x = 300;
         }
 
         //publish /cmd_ori
@@ -230,6 +219,38 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
 
         //節點補償
         if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
+
+        //逆時針轉90度
+        if(MAP::nodeNow == 12 && !rotate_ed){
+            SCRIPT::rotateCCW(nh);
+            rotate_ed = 1;
+        }
+
+        //第二重製區偏移
+        if(rotate_ed && (odometry.x < 710 || odometry.y < 370)){
+            ROS_WARN("---------------------------------");
+            ROS_WARN("sec RESET shifting");
+            while(1){
+                ros::spinOnce();
+                ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                if(odometry.x < 710)    cmd_vel.linear.y = -2;
+                else    cmd_vel.linear.y = 0;
+                if(odometry.y < 370)    cmd_vel.linear.x = 15;
+                else    cmd_vel.linear.x = 0;
+
+                if(odometry.x >= 710 && odometry.y >= 370){
+                    odometry.x = 710;
+                    odometry.y = 370;
+                    secRESET = true;
+                    ROS_WARN("secRESET!!");
+                    break;
+                }
+
+                orientation_pub.publish(orientation);
+                cmd_vel_pub.publish(cmd_vel);
+                rate.sleep();
+            }
+        }
 
         //第二次辨識
         if(odometry.x >= secondCapt && capt_ed_times == 1){
@@ -497,6 +518,7 @@ void runInit(ros::NodeHandle& nh){
     // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
+    stickOnLine_sub = nh.subscribe("/stickOnLine",1,stickCallback);
 
     ONE.data = 1;
 
@@ -509,6 +531,7 @@ void runInit(ros::NodeHandle& nh){
     nh.getParam("/start_togo",start_togo);
     nh.getParam("/time_6",time_6);
     nh.getParam("/time_7",time_7);
+    nh.getParam("/after_6_shift",after_6_shift);
 }
 
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
@@ -528,4 +551,7 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
     ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow, ODOM::faceTo);
+}
+void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
+    stick = stick_->data;
 }
