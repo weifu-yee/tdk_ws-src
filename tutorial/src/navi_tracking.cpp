@@ -30,8 +30,8 @@ geometry_msgs::Twist vel;
 //tracker arguments --from Arduino
 double Err_d,Err_theta;
 int8_t std_tracker_data[20],temp[20];
-// int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
-int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
+int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
+// int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
 
 
 // 1. tracker data standardrize   robot coordinate convert to tracker coordinate
