@@ -1,7 +1,7 @@
 # constant
 span: 0.1
-phy_maxMS: 46
-# phy_maxMS: 200
+# phy_maxMS: 46
+phy_maxMS: 20
 slowMS: 15
 
 # soft
@@ -24,14 +24,14 @@ vel_limit: 50
 
 # transmission fix
 
-vkp: 10.0
+vkp: 10
 # vkp: 5.0
 vki: 0.0
 vkd: 0.0
 
 # rotation fix
 
-wkp: 2.0
+wkp: 0.5
 # wkp: 0.9
 wki: 0.0
 wkd: 0.0

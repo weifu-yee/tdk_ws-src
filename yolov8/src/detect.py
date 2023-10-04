@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 import rospy
 from std_msgs.msg import Int32MultiArray, Bool
 from ultralytics import YOLO
@@ -9,26 +9,33 @@ msg = Int32MultiArray()
 
 model = YOLO("/home/ditrobotics/tdk_ws/src/yolov8/src/number.pt")
 
+prev = False
 def detect_callback(msg):
-    print('received')
-    if msg.data:  # Check if message data is True
+    global prev
+    if msg.data and not prev:
         detect_img()
+    prev = msg.data
 
 def detect_img():
+    global pub, msg
     print("[YOLO] start inference ...")
     img_path = f"/home/ditrobotics/tdk_ws/src/yolov8/jpg/capture.jpg"
     results = model.predict(source=img_path, save=True)
     rospy.loginfo("[3] Detect Finished")
+    
+    rospy.loginfo(results)
 
     # Get detected class name
     cls_name = []
     for r in results:
         cls_name.extend(r.boxes.boxes[:, -1].tolist())
-
+    
     # update msg
     msg.data = [int(x + 1) for x in cls_name]
-    pub.publish(msg)
+    
     rospy.loginfo("[3] Published detected class: %s", msg.data)
+    pub.publish(msg)
+    
 
 def main():
     rospy.init_node('detect_node')

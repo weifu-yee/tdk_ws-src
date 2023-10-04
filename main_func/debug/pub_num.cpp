@@ -16,8 +16,13 @@ int main(int argc, char **argv)
 
     try {
         // Load the YAML file
+<<<<<<< HEAD
         // YAML::Node config = YAML::LoadFile("/home/ditrobotics/tdk_ws/src/main_func/params/pub_num.yaml");
         YAML::Node config = YAML::LoadFile("/root/tdk_ws/src/main_func/params/pub_num.yaml");
+=======
+        YAML::Node config = YAML::LoadFile("/home/ditrobotics/tdk_ws/src/main_func/params/pub_num.yaml");
+        // YAML::Node config = YAML::LoadFile("/root/tdk_ws/src/main_func/params/pub_num.yaml");
+>>>>>>> master
 
         // Access values by key
         int passThrough1 = config["passThrough1"].as<int>();
