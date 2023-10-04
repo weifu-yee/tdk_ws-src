@@ -244,8 +244,10 @@ int main(int argc, char** argv) {
 
                 stick.data = 0;
                 // ROS_INFO("overshoot: prev_ori = %d , ori = %d; u_d: %.3lf, VX: %.3lf, VY: %.3lf",prev_ori,ori,u_d,VX,VY);
-            }else{
+            }else if(PID_mode){
                 stick.data = 1;
+            }else{
+                stick.data = 0;
             }
 //
 

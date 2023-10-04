@@ -528,8 +528,8 @@ void runInit(ros::NodeHandle& nh){
     node_sub = nh.subscribe("/node_detect",1,nodeCallback);
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
     number_sub = nh.subscribe("/numbers",1,numberCallback);
-    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
-    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
+    // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
+    odom_sub = nh.subscribe("/realspeed",1,odomCallback);
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
     stickOnLine_sub = nh.subscribe("/stickOnLine",1,stickCallback);
@@ -554,8 +554,9 @@ void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
     bool isNode = is_node->data;
     if(isNode != isNodeLast && isNode){
         onNode = true;
-        // ROS_WARN("(%.1lf, %.1lf, %.1lf) faceTo: %d",odometry.x, odometry.y, odometry.theta, orientation.data);
+        ROS_WARN("onNode!");
     }
+    // ROS_WARN("nodeCall, isNode:%d, isNodeLast:%d",isNode,isNodeLast);
     isNodeLast = isNode;
 }
 void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
