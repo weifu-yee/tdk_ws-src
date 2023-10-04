@@ -241,13 +241,7 @@ int main(int argc, char** argv) {
                 u_theta = 0;
                 VX = -u_d*sin(((double)ori)*0.5*pi);
                 VY = u_d*cos(((double)ori)*0.5*pi);
-
-                stick.data = 0;
                 // ROS_INFO("overshoot: prev_ori = %d , ori = %d; u_d: %.3lf, VX: %.3lf, VY: %.3lf",prev_ori,ori,u_d,VX,VY);
-            }else if(PID_mode){
-                stick.data = 1;
-            }else{
-                stick.data = 0;
             }
 //
 
@@ -269,6 +263,9 @@ int main(int argc, char** argv) {
             vel.linear.y = VY * ratioMS;
             vel.angular.z = W * ratioMS;
 
+            if(PID_mode)    stick.data = 1;
+            else    stick.data = 0;
+
             pub_node.publish(node_point);
             pub_vel.publish(vel);
             pub_stickOnLine.publish(stick);
@@ -279,7 +276,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
-//tools
-
-
