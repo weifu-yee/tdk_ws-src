@@ -3,15 +3,10 @@
 
 #include "map.h"
 
-extern double secondCapt;
-extern double thirdCapt;
-extern int _pub4;
-
 namespace CAM{
     extern std::set<int> numbers;
     extern bool cease;
-    void capture_n_detect(int op, ros::Publisher& cam_pub, 
-        ros::Publisher& orientation_pub, ros::NodeHandle& nh);
+    extern double capt_x[];
     void what_to_erase(int a, int b);
 }
 using namespace CAM;

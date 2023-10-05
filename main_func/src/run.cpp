@@ -50,7 +50,7 @@ namespace SCRIPT{
 }
 
 //initialization
-void nh_Init(ros::NodeHandle& nh);
+void runInit(ros::NodeHandle& nh);
 
 //Callback
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node);
@@ -64,7 +64,7 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "main_func");
     ros::NodeHandle nh;
 
-    nh_Init(nh);
+    runInit(nh);
 
     MAP::buildNode();
     MAP::initBuildEdge();
@@ -533,7 +533,7 @@ void SCRIPT::testLine(ros::NodeHandle& nh){
     }
 }
 
-void nh_Init(ros::NodeHandle& nh){
+void runInit(ros::NodeHandle& nh){
     orientation_pub = nh.advertise<std_msgs::Int8>("/cmd_ori", 1);
     cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     node_sub = nh.subscribe("/node_detect",1,nodeCallback);
