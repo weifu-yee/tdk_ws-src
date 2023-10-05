@@ -19,23 +19,10 @@
 
 #include "cam.h"
 #include "odom.h"
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Switch
-// #define buildNodeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/buildNode.yaml"
-// #define initBuildEdgeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/initBuildEdge.yaml"
-#define buildNodeFilePath "/root/tdk_ws/src/main_func/params/buildNode.yaml"
-#define initBuildEdgeFilePath "/root/tdk_ws/src/main_func/params/initBuildEdge.yaml"
-<<<<<<< HEAD
-=======
 #define buildNodeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/buildNode.yaml"
 #define initBuildEdgeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/initBuildEdge.yaml"
 // #define buildNodeFilePath "/root/tdk_ws/src/main_func/params/buildNode.yaml"
 // #define initBuildEdgeFilePath "/root/tdk_ws/src/main_func/params/initBuildEdge.yaml"
->>>>>>> master
-=======
->>>>>>> Switch
 #define num_of_nodes 18
 
 using namespace std;

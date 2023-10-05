@@ -40,6 +40,7 @@ int cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
 double degrees[] = {0, PI/2, PI, -PI/2};
 double thetaToGo;
 int after_6_shift_state = 0;
+int stick_times = 0;
 //publisher
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
@@ -94,14 +95,14 @@ int main(int argc, char **argv){
             case 0:{
                 robot_state = "waiting";
                 individual_action = Action::waiting;
-                MAP::initBuildEdge();
+                // MAP::initBuildEdge();
                 MAP::startPointInit(-1, 0);
                 break;
             }
             case 1:{
-                // if(robot_state == "waiting"){
-                //     robot_state = "tutorial_move";
-                // }
+                if(robot_state == "waiting"){
+                    robot_state = "tutorial_move";
+                }
                 if(!secRESET){
                     //開相機
                     if(cam_mode_1 < att){
@@ -152,17 +153,29 @@ int main(int argc, char **argv){
                             ROS_WARN("over_hurdles");
                         }
                         individual_action = Action::over_hurdles;
+                        ODOM::odometry.x = 270;     //
                         ori6State++ ;
                         if(ori6State == time_6*freq){
+                            ROS_WARN_THROTTLE(1,"ori6State: %d",ori6State);
+                            ODOM::odometry.x = 270;
                             robot_state = "calibration";
                             stick = 0;
+
+                            //
+                            // ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                            // orientation_pub.publish(orientation);
+                            // robot_state = "tutorial_move";
+                            // individual_action = Action::tutorial_move;
                         }
                     }
                     else if(robot_state == "calibration"){
                         individual_action = Action::calibration;
-                        if(stick == true){
+                        if(stick == true && stick_times > 5){
                             ROS_WARN("stick on the line!!");
+                            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                            orientation_pub.publish(orientation);
                             robot_state = "tutorial_move";
+                            individual_action = Action::tutorial_move;
                         }
                     }
                     else if(robot_state == "capture_n_detect"){
@@ -175,6 +188,7 @@ int main(int argc, char **argv){
                             orientation_pub.publish(orientation);
                             robot_state = "tutorial_move";
                             individual_action = Action::tutorial_move;
+                            cam_flag = 0;
                         }
                     }
                     else if(robot_state == "rotate"){
@@ -408,6 +422,8 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
+    if(stick == false)  stick_times = 0;
+    else    stick_times ++;
 }
 void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
     RESET::state = reset_data->data;
