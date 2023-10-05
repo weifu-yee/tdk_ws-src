@@ -134,6 +134,12 @@ int main(int argc, char **argv){
                         robot_state = "rotate";
                         rotate_ed = 1;
                     }
+                    //第二重製區偏移
+                    if(ODOM::faceTo == 1 && (odometry.x < 710 || odometry.y < 370)){
+                        ROS_WARN("---------------------------------");
+                        ROS_WARN("sec RESET shifting (odom_move)");
+                        robot_state = "odom_move";
+                    }
 
 
                     if(robot_state == "tutorial_move"){
@@ -175,13 +181,31 @@ int main(int argc, char **argv){
                         individual_action = Action::rotate;
                             
                         if(!amoungDeg(ODOM::odometry.theta,thetaToGo)){
-                            ODOM::faceTo++;
+                            ODOM::faceTo ++;
+                            ROS_INFO("ODOM::faceTo: %d",ODOM::faceTo);
                             ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
                             orientation_pub.publish(orientation);
                             robot_state = "tutorial_move";
                             individual_action = Action::tutorial_move;
                         }
                         
+                    }
+                    else if(robot_state == "odom_move"){
+                        individual_action = Action::odom_move;
+
+                        ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                        if(odometry.x < 710)    cmd_vel.linear.y = -2;
+                        else    cmd_vel.linear.y = 0;
+                        if(odometry.y < 370)    cmd_vel.linear.x = 15;
+                        else    cmd_vel.linear.x = 0;
+
+                        if(!(odometry.x < 710 || odometry.y < 370)){
+                            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                            orientation_pub.publish(orientation);
+                            robot_state = "tutorial_move";
+                            individual_action = Action::tutorial_move;
+                            secRESET = true;
+                        }
                     }
                     
                 }
@@ -198,7 +222,7 @@ int main(int argc, char **argv){
             }
             case Action::tutorial_move:{
                 if(onNode){
-                    ROS_INFO("+++++++++++++++++ onNode: %d",MAP::nodeToGo);
+                    // ROS_INFO("+++++++++++++++++ onNode: %d",MAP::nodeToGo);
 
                     //檢查odom是否在node一定範圍內
                     if(MAP::check_onNode(MAP::nodeToGo) == 0){
@@ -241,6 +265,8 @@ int main(int argc, char **argv){
                 break;
             }
             case Action::odom_move:{
+                orientation_pub.publish(orientation);
+                cmd_vel_pub.publish(cmd_vel);
                 break;
             }
             case Action::rotate:{
