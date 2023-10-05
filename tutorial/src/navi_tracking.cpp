@@ -24,14 +24,15 @@ std_msgs::Bool node_point;
 std_msgs::Bool stick;
 
 bool PID_mode, EX_mode;
+bool _PID_mode;
 double V = 0, vel_limit = 0;
 double u_d = 0, u_theta = 0, u = 0;
 geometry_msgs::Twist vel;
 //tracker arguments --from Arduino
 double Err_d,Err_theta;
 int8_t std_tracker_data[20],temp[20];
-int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
-// int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
+// int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
+int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
 
 
 // 1. tracker data standardrize   robot coordinate convert to tracker coordinate
@@ -168,6 +169,13 @@ bool detectRisingEdge(bool current) {
     previous = current;
     return temp;
 }
+void PIDMODE(){
+    for(i = 0,_PID_mode = false; i < 20; ++i){
+        if(std_tracker_data[i] == black){
+            _PID_mode = true;
+        }
+    }
+}
 
 //main function
 int main(int argc, char** argv) {
@@ -206,7 +214,7 @@ int main(int argc, char** argv) {
         nh.getParam("/V",V);
         nh.getParam("/vel_limit",vel_limit);
 
-        if(ori >= 0 && ori < 4 || ori == -2){
+        if(ori >= 0 && ori < 4 || ori == -2 || ori == 10){
             if(ori == -2){
                 _phy_maxMS = slowMS;
                 ori = last_ori;
@@ -263,13 +271,23 @@ int main(int argc, char** argv) {
             vel.linear.y = VY * ratioMS;
             vel.angular.z = W * ratioMS;
 
-            if(PID_mode)    stick.data = 1;
-            else    stick.data = 0;
-
             pub_node.publish(node_point);
             pub_vel.publish(vel);
-            pub_stickOnLine.publish(stick);
+
+            if(ori == 10){                
+                if(PID_mode)    stick.data = 1;
+                else    stick.data = 0;
+                pub_stickOnLine.publish(stick);
+            }
         }
+
+        // tracker_data_std();
+        // PIDMODE();
+        // if(_PID_mode)    stick.data = 1;
+        // else    stick.data = 0;
+        // pub_stickOnLine.publish(stick);
+        // ROS_WARN("stick.data: %d",stick.data);
+
         last_ori = ori;
         ros::Duration(span).sleep();
     }
