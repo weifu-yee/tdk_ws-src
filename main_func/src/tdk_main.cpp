@@ -91,7 +91,7 @@ int main(int argc, char **argv){
         ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
         // ROS_WARN("robot_state: %s",robot_state.c_str());
 
-        ROS_ERROR_THROTTLE(0.3, "ODOM::odometry.x: %d",ODOM::odometry.x);
+        ROS_ERROR_THROTTLE(0.3, "ODOM::odometry.x: %f",ODOM::odometry.x);
 
         switch(RESET::state){
             case 0:{
@@ -101,7 +101,7 @@ int main(int argc, char **argv){
                 MAP::startPointInit(-1, 0);
                 break;
             }
-            case 1:{
+            case 1:{    //第一關
                 if(robot_state == "waiting"){
                     robot_state = "tutorial_move";
                 }
