@@ -91,6 +91,8 @@ int main(int argc, char **argv){
         ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
         // ROS_WARN("robot_state: %s",robot_state.c_str());
 
+        ROS_ERROR_THROTTLE(0.3, "ODOM::odometry.x: %d",ODOM::odometry.x);
+
         switch(RESET::state){
             case 0:{
                 robot_state = "waiting";
