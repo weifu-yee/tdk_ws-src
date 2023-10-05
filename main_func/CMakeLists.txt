@@ -155,9 +155,6 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(run src/run.cpp lib/map.cpp lib/cam.cpp lib/odom.cpp lib/reset.cpp)
-target_link_libraries(run ${catkin_LIBRARIES} yaml-cpp)
-add_dependencies(run ${catkin_EXPORTED_TARGETS})
 
 add_executable(tdk_main src/tdk_main.cpp lib/map.cpp lib/cam.cpp lib/odom.cpp lib/reset.cpp)
 target_link_libraries(tdk_main ${catkin_LIBRARIES} yaml-cpp)

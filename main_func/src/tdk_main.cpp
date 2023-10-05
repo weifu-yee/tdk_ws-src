@@ -5,8 +5,19 @@
 using namespace std;
 
 #define att 20
+enum Action{
+    waiting,
+    tutorial_move,
+    odom_move,
+    rotate,
+    capture_n_detect,
+    over_hurdles,
+    calibration,
+    binBaiYa,
+    dustBox
+};
 
-string individual_action;
+Action individual_action;
 string robot_state;
 
 //global vars
@@ -18,8 +29,17 @@ bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 bool rotate_ed = 0;
 int time_6 = 30, time_7 = 15;
+// double after_6_shift = 40;
 double after_6_shift = 40;
 bool stick = 0;
+bool secRESET = 0;
+int cam_mode_1 = 0;
+int ori6State = 0;
+int op;
+int cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
+double degrees[] = {0, PI/2, PI, -PI/2};
+double thetaToGo;
+int after_6_shift_state = 0;
 //publisher
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
@@ -40,20 +60,6 @@ std_msgs::Int8 cmd_laji;
 geometry_msgs::Twist rotate_ang;
 std_msgs::Bool ONE;
 
-//scripts
-namespace SCRIPT{
-    void firstLevel(ros::NodeHandle& nh);
-    void binBaiYa(ros::NodeHandle& nh);
-    void dustBox(ros::NodeHandle& nh);
-    void badminton(ros::NodeHandle& nh);
-    
-    void overHurdles(ros::NodeHandle& nh, int& ori6State);
-    void rotateCCW(ros::NodeHandle& nh);
-    void from_A_To_B(ros::NodeHandle& nh, int A, int B);
-
-    void testLine(ros::NodeHandle& nh);
-}
-
 //initialization
 void runInit(ros::NodeHandle& nh);
 
@@ -71,20 +77,31 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "tdk_main");
     ros::NodeHandle nh;
 
-    runInit(nh);
-
     MAP::buildNode();
     MAP::initBuildEdge();
 
+    runInit(nh);
+
     ros::Rate rate(freq);
     
-    robot_state == "tutorial_move"
+    
     while(nh.ok()){
+
+        ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
+        // ROS_WARN("robot_state: %s",robot_state.c_str());
+
         switch(RESET::state){
-            case 0:
-                ROS_ERROR("~~~ Waiting for the switch on ~~~");
+            case 0:{
+                robot_state = "waiting";
+                individual_action = Action::waiting;
+                MAP::initBuildEdge();
+                MAP::startPointInit(-1, 0);
                 break;
+            }
             case 1:{
+                if(robot_state == "waiting"){
+                    robot_state = "tutorial_move";
+                }
                 if(!secRESET){
                     //開相機
                     if(cam_mode_1 < att){
@@ -93,26 +110,24 @@ int main(int argc, char **argv){
                         cam_mode_1 ++;
                     }
                     //跨坎
-                    if(ori6State < time_6*freq && odometry.x >= 140 + 20 && 
+                    if(ori6State < (int)time_6*freq && odometry.x >= 140 + 20 && 
                         (MAP::nodeNow >= 1 && MAP::nodeNow <= 3) && 
-                        (MAP::nodeToGo >= 4 && MAP::odeToGo <= 6)){   
+                        (MAP::nodeToGo >= 4 && MAP::nodeToGo <= 6)){   
                         robot_state = "over_hurdles";
                     }
                     //三次辨識
-                    for(i = 0; i <= 2; i++){
-                        if(odometry.x >= CAM::capt_x[i] && capt_ed_times == i){
-                            static int op = 3*i + 1;
-                            ROS_INFO("cease!!");
-                            static int cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
+                    for(int i = 0; i <= 2; i++){
+                        if(capt_ed_times == i && odometry.x >= CAM::capt_x[i]){
+                            op = 3*i + 1;
+                            ROS_WARN("cease!!");
+                            cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
                             robot_state = "capture_n_detect";
                             capt_ed_times++;
                         }
                     }
                     //節點12旋轉
                     if(MAP::nodeNow == 12 && !rotate_ed){
-
-                        static double degrees[] = {0, PI/2, PI, -PI/2};
-                        static double thetaToGo = degrees[(ODOM::faceTo + 1) % 4];
+                        thetaToGo = degrees[(ODOM::faceTo + 1) % 4];
                         ROS_WARN("---------------------------------");
                         ROS_WARN("SCRIPT::rotateCCW, faceTo: %f -> %f",degrees[ODOM::faceTo],thetaToGo);
 
@@ -122,36 +137,49 @@ int main(int argc, char **argv){
 
 
                     if(robot_state == "tutorial_move"){
-                        individual_action = tutorial_move;
+                        individual_action = Action::tutorial_move;
                     }
                     else if(robot_state == "over_hurdles"){
+
                         if(!ori6State){
                             ROS_WARN("---------------------------------");
                             ROS_WARN("over_hurdles");
                         }
-                        individual_action = over_hurdles;
+                        individual_action = Action::over_hurdles;
                         ori6State++ ;
-                        if(ori6State == time_6*freq)    robot_state = "calibration";
+                        if(ori6State == time_6*freq){
+                            robot_state = "calibration";
+                            stick = 0;
+                        }
                     }
                     else if(robot_state == "calibration"){
-                        
-                        if(stick){
+                        individual_action = Action::calibration;
+                        if(stick == true){
                             ROS_WARN("stick on the line!!");
                             robot_state = "tutorial_move";
                         }
                     }
                     else if(robot_state == "capture_n_detect"){
-                        individual_action = capture_n_detect;
+                        // ROS_INFO("capture_n_detect!!");
+                        individual_action = Action::capture_n_detect;
                         
                         if(cam_flag == 1){
                             CAM::what_to_erase(_a, _b);
+                            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                            orientation_pub.publish(orientation);
                             robot_state = "tutorial_move";
+                            individual_action = Action::tutorial_move;
                         }
                     }
                     else if(robot_state == "rotate"){
-                        individual_action = rotate;
-                        if(!amoungDeg(degrees[ODOM::faceTo],thetaToGo)){
-                            robot_state == "tutorial_move"
+                        individual_action = Action::rotate;
+                            
+                        if(!amoungDeg(ODOM::odometry.theta,thetaToGo)){
+                            ODOM::faceTo++;
+                            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                            orientation_pub.publish(orientation);
+                            robot_state = "tutorial_move";
+                            individual_action = Action::tutorial_move;
                         }
                         
                     }
@@ -160,21 +188,23 @@ int main(int argc, char **argv){
                 // ROS_WARN("**************** pass 1st Level!! ****************");
             }
             case 2:
+            break;
         }
 
         switch(individual_action){
-            case tutorial_move:{
+            case Action::waiting:{
+                ROS_ERROR_THROTTLE(1, "~~~ Waiting for the switch on ~~~");
+                break;
+            }
+            case Action::tutorial_move:{
                 if(onNode){
+                    ROS_INFO("+++++++++++++++++ onNode: %d",MAP::nodeToGo);
+
                     //檢查odom是否在node一定範圍內
                     if(MAP::check_onNode(MAP::nodeToGo) == 0){
                         ROS_ERROR("Node misjudgment!!");
                         onNode = false;
                         continue;
-                    }
-                    //第一次辨識
-                    if(MAP::nodeNow == -1){
-                        CAM::capture_n_detect(1, cam_pub, orientation_pub, nh);
-                        capt_ed_times ++;
                     }
                     //更新現在的node
                     MAP::nodeNow = MAP::nodeToGo;
@@ -186,13 +216,14 @@ int main(int argc, char **argv){
                     for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
                     if(max == -1){
                         ROS_ERROR("NoWay!!");
-                        return;
+                        break;
                     }
                     MAP::nodeToGo = max;
                     //決定方向
                     ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
                     //刪除來的路徑
-                    MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
+                    if(MAP::nodeToGo != 16 && MAP::nodeToGo != 17)
+                        MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
                     //重製"在節點上"
                     onNode = false;
 
@@ -207,14 +238,17 @@ int main(int argc, char **argv){
                 if(MAP::nodeLoseConp())     onNode = 1;
 
                 orientation_pub.publish(orientation);
+                break;
             }
-            case odom_move:{
+            case Action::odom_move:{
+                break;
             }
-            case rotate:{
+            case Action::rotate:{
                 ODOM::oriNow = orientation.data = 4;
                 orientation_pub.publish(orientation);
+                break;
             }
-            case capture_n_detect:{
+            case Action::capture_n_detect:{
                 if(_pub4 > att)   cam_mode.data = 4;
                 else    cam_mode.data = 3;
                 cam_pub.publish(cam_mode);
@@ -240,15 +274,15 @@ int main(int argc, char **argv){
                 }
                 _a = a;     _b = b;
                 _pub4 ++;
+                break;
             }
-            case over_hurdles:{
-                static int k = 0, k_last = -1;
-                ROS_WARN_THROTTLE(1," \"6\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori6State/20, time_6);
+            case Action::over_hurdles:{
+                ROS_WARN_THROTTLE(1," \"6\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori6State/20 + 1, time_6);
                 ODOM::oriNow = orientation.data = 6;
                 orientation_pub.publish(orientation);
+                break;
             }
-            case calibration:{
-                static int after_6_shift_state = 0;
+            case Action::calibration:{
                 ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
                 if(after_6_shift_state == 0){
                     if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
@@ -266,12 +300,19 @@ int main(int argc, char **argv){
                     }
                 }else{
                     ROS_ERROR("can't stick the line ... QQ");
+                    ODOM::oriNow = orientation.data = 0;
+                    robot_state = "tutorial_move";
                 }
                 orientation_pub.publish(orientation);
                 cmd_vel_pub.publish(cmd_vel);
+                break;
             }
-            case binBaiYa:
-            case dustBox:
+            case Action::binBaiYa:{
+                break;
+            }
+            case Action::dustBox:{
+                break;
+            }
         }
 
 
@@ -281,405 +322,6 @@ int main(int argc, char **argv){
     return 0;
 }
 
-//scripts
-void SCRIPT::firstLevel(ros::NodeHandle& nh){
-    ROS_WARN("---------------------------------");
-    ROS_WARN("\n\nFirstLevel:\tOn %d, -> %d ; go ahead: %d\n",start_now,start_togo,ODOM::oriNow);
-
-    ros::Rate rate(freq);
-    cam_mode.data = 1;
-
-    int ori6State = 0;
-    if(MAP::nodeNow > 3 || MAP::nodeNow == -2)    ori6State = time_6*20;
-    bool secRESET = false;
-    while(nh.ok() && RESET::state && !secRESET){
-        // std::cout<<"secRESET:"<<secRESET<<" rotate_ed:"<<rotate_ed<<" ODOM::faceTo:"<<ODOM::faceTo<<endl;
-        cam_pub.publish(cam_mode);
-
-        //在node上
-        if(onNode){
-            //檢查odom是否在node一定範圍內
-            if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_ERROR("Node misjudgment!!");
-                onNode = false;
-                continue;
-            }
-            //第一次辨識
-            if(MAP::nodeNow == -1){
-                CAM::capture_n_detect(1, cam_pub, orientation_pub, nh);
-                capt_ed_times ++;
-            }
-            //更新現在的node
-            MAP::nodeNow = MAP::nodeToGo;
-            odometry.x = MAP::node[MAP::nodeNow].second.first;
-            odometry.y = MAP::node[MAP::nodeNow].second.second;
-            //更新要去的node
-            auto arr = MAP::adj_list[MAP::nodeNow];
-            int max = -1;
-            for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
-            if(max == -1){
-                ROS_ERROR("NoWay!!");
-                return;
-            }
-            MAP::nodeToGo = max;
-            //發布方向
-            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
-            //刪除來的路徑
-            MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
-            //重製"在節點上"
-            onNode = false;
-
-            ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
-
-        }
-
-        //靠近node時減速
-        if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
-
-        //跨坎劇本
-        SCRIPT::overHurdles(nh, ori6State);
-
-        // publish /cmd_ori
-        orientation_pub.publish(orientation);
-        
-        //節點補償
-        // if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
-        if(MAP::nodeLoseConp())     onNode = 1;
-
-        //逆時針轉90度
-        if(MAP::nodeNow == 12 && !rotate_ed){
-            SCRIPT::rotateCCW(nh);
-            rotate_ed = 1;
-        }
-
-        //第二重製區偏移
-        if(rotate_ed && (odometry.x < 710 || odometry.y < 370)){
-            ROS_WARN("---------------------------------");
-            ROS_WARN("sec RESET shifting");
-            while(nh.ok() && RESET::state){
-                ros::spinOnce();
-                ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-                if(odometry.x < 710)    cmd_vel.linear.y = -2;
-                else    cmd_vel.linear.y = 0;
-                if(odometry.y < 370)    cmd_vel.linear.x = 15;
-                else    cmd_vel.linear.x = 0;
-
-                if(odometry.x >= 710 && odometry.y >= 370){
-                    odometry.x = 710;
-                    odometry.y = 370;
-                    secRESET = true;
-                    ROS_WARN("secRESET done!!");
-                    break;
-                }
-
-                orientation_pub.publish(orientation);
-                cmd_vel_pub.publish(cmd_vel);
-                rate.sleep();
-            }
-        }
-
-        //第二次辨識
-        if(odometry.x >= secondCapt && capt_ed_times == 1){
-            CAM::capture_n_detect(4, cam_pub, orientation_pub, nh);
-            capt_ed_times++;
-        }
-        //第三次辨識
-        if(odometry.x >= thirdCapt && MAP::nodeNow > 3 && capt_ed_times == 2){
-            CAM::capture_n_detect(7, cam_pub, orientation_pub, nh);
-            capt_ed_times++;
-            cam_mode.data = 2;
-        }
-
-        //20Hz
-        ros::spinOnce();
-        rate.sleep();
-    }
-}
-void SCRIPT::binBaiYa(ros::NodeHandle& nh){
-    ROS_WARN("---------------------------------");
-    ROS_WARN("binBaiYa");
-    ros::Rate rate(freq);
-    
-    int cmdori_7_times = 0;
-    while(nh.ok() && RESET::state && MAP::nodeToGo != 14){
-        ros::spinOnce();
-        //在node上
-        if(onNode){
-            //檢查odom是否在node一定範圍內
-            if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_WARN("Node misjudgment!!");
-                onNode = false;
-                continue;
-            }
-            //更新現在的node
-            MAP::nodeNow = MAP::nodeToGo;
-            odometry.x = MAP::node[MAP::nodeNow].second.first;
-            odometry.y = MAP::node[MAP::nodeNow].second.second;
-            //更新要去的node
-            auto arr = MAP::adj_list[MAP::nodeNow];
-            int max = -1;
-            for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
-            if(max == -1){
-                ROS_ERROR("NoWay!!");
-                return;
-            }
-            MAP::nodeToGo = max;
-
-            //發布方向
-            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
-            //刪除來的路徑
-            MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
-            //重製"在節點上"
-            onNode = false;
-
-            ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
-        }
-
-        if(MAP::nodeNow == 16 && cmdori_7_times == 0){
-            int k = 0, klast = -1;
-            while(nh.ok() && RESET::state && cmdori_7_times++ < time_7*20){
-                if(cmdori_7_times < 40){
-                    orientation.data = 7;
-                }
-                else    orientation.data = -1;
-                orientation_pub.publish(orientation);
-                k = cmdori_7_times/20;
-                if(k != klast){
-                    ROS_WARN(" \"7\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,cmdori_7_times/20, time_7);
-                    klast = k;
-                }
-                rate.sleep();
-            }
-            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
-        }
-
-        //靠近node時減速
-        if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
-
-        //節點補償
-        if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
-        
-        //publish /cmd_ori
-        orientation_pub.publish(orientation);
-
-        //20Hz
-        rate.sleep();
-    }
-}
-void SCRIPT::from_A_To_B(ros::NodeHandle& nh, int A, int B){
-    ROS_WARN("---------------------------------");
-    ROS_WARN("SCRIPT::from_%d_To_%d",A,B);
-    ODOM::oriNow = orientation.data = MAP::startPointInit(A,B);
-    if(A == -2)     MAP::eraseEdge(12, 13);
-    if(A == 14)     MAP::eraseEdge(14, 13);
-
-    ros::Rate rate(freq);
-    while(nh.ok() && RESET::state && MAP::nodeNow != B){
-        ros::spinOnce();
-
-        //在node上
-        if(onNode){
-            //檢查odom是否在node一定範圍內
-            if(MAP::check_onNode(MAP::nodeToGo) == 0){
-                ROS_WARN("Node misjudgment!!");
-                onNode = false;
-                continue;
-            }
-            //更新現在的node
-            MAP::nodeNow = MAP::nodeToGo;
-            odometry.x = MAP::node[MAP::nodeNow].second.first;
-            odometry.y = MAP::node[MAP::nodeNow].second.second;
-            //更新要去的node
-            auto arr = MAP::adj_list[MAP::nodeNow];
-            int max = -1;
-            for(auto it = arr.begin(); it != arr.end(); ++it)   max = (max<*it)?*it:max;
-            if(max == -1){
-                ROS_ERROR("NoWay!!");
-                return;
-            }
-            MAP::nodeToGo = max;
-            //發布方向
-            ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
-            //刪除來的路徑
-            if(max != 16 && max != 17){
-                MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
-            }
-            //重製"在節點上"
-            onNode = false;
-
-            ROS_WARN("On %d, -> %d ; go ahead: %d",MAP::nodeNow,MAP::nodeToGo,orientation.data);
-        }
-
-        //靠近node時減速
-        if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
-
-        //節點補償
-        if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
-        
-        //publish /cmd_ori
-        orientation_pub.publish(orientation);
-
-        //20Hz
-        rate.sleep();
-    }
-    ROS_WARN("Now on the node %d",B);
-}
-void SCRIPT::dustBox(ros::NodeHandle& nh){
-    ROS_WARN("---------------------------------");
-    ROS_WARN("dustBox");
-
-    //Go left to get balls
-    SCRIPT::from_A_To_B(nh, 14, 17);
-
-    //do the script of dustBox
-    ROS_WARN("---------------------------------");
-    ROS_WARN("dustBox -- upper & lowerSTM");
-    // cmd_laji.data = 1;
-    // laji_pub.publish(cmd_laji);
-
-    //Go Back to 14 and shoot
-    SCRIPT::from_A_To_B(nh, 17, 14);
-
-    //shoot
-    ROS_WARN("---------------------------------");
-    ROS_WARN("shoot -- upperSTM");
-}
-void SCRIPT::badminton(ros::NodeHandle& nh){
-    ROS_WARN("---------------------------------");
-    ROS_WARN("SCRIPT::badminton");
-
-    //Go ahead to the badminton platform
-    SCRIPT::from_A_To_B(nh, 14, 15);
-
-    //do the script of badminton
-    ROS_WARN("badminton -- upper & lowerSTM");
-}
-void SCRIPT::rotateCCW(ros::NodeHandle& nh){
-    double degrees[] = {0, PI/2, PI, -PI/2};
-    double thetaToGo = degrees[(ODOM::faceTo + 1) % 4];
-    ROS_WARN("---------------------------------");
-    ROS_WARN("SCRIPT::rotateCCW, faceTo: %f -> %f",degrees[ODOM::faceTo],thetaToGo);
-    auto amoungDeg = [&](double a, double b){
-        if(b == PI)     return a < b - 0.2;
-        if(b >= 0)  return a < b;
-        return a < b || a > PI - 0.2;
-    };
-
-    ros::Rate rate(freq);
-    while(nh.ok() && RESET::state && amoungDeg(ODOM::odometry.theta, thetaToGo)){
-        ODOM::oriNow = orientation.data = 4;
-        orientation_pub.publish(orientation);
-        ros::spinOnce();
-        rate.sleep();
-    }
-    // rotate_ed = 1;
-    ODOM::odometry.theta = thetaToGo;
-    // ODOM::oriNow = orientation.data = 0;
-    ODOM::faceTo ++;    ODOM::faceTo %= 4;
-    ROS_WARN("rotate_done!!");
-}
-void SCRIPT::overHurdles(ros::NodeHandle& nh, int& ori6State){
-
-
-
-        //左移右移 追到線
-        ROS_WARN("---------------------------------");
-        ROS_WARN("right shift & left shift to cont. stick on line");
-        int after_6_shift_state = 0;
-        while(1){
-            ros::spinOnce();
-            ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-            if(after_6_shift_state == 0){
-                if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
-                    cmd_vel.linear.y = -15;
-                }else{
-                    after_6_shift_state ++;
-                    ROS_WARN("switch");
-                }
-            }else if(after_6_shift_state == 1){
-                if(ODOM::odometry.y < MAP::node[MAP::nodeNow].second.second + after_6_shift){
-                    cmd_vel.linear.y = 15;
-                }else{
-                    after_6_shift_state ++;
-                    ROS_WARN("switch");
-                }
-            }else{
-                ROS_ERROR("can't stick the line ... QQ");
-                break;
-            }
-
-            if(stick){
-                ROS_WARN("stick on the line!!");
-                break;
-            }
-
-            orientation_pub.publish(orientation);
-            cmd_vel_pub.publish(cmd_vel);
-            rate.sleep();
-        }
-
-        ODOM::oriNow = orientation.data = 0;
-        ODOM::odometry.y = MAP::node[MAP::nodeNow].second.second;
-        ODOM::odometry.x = 300;
-    }
-}
-
-void SCRIPT::testLine(ros::NodeHandle& nh){
-    ros::Rate rate(freq);
-    int oriParam_last = -1;
-    
-    while(nh.ok() && RESET::state){
-        ros::spinOnce();
-        int oriParam = 0;
-
-
-        nh.getParam("/oriParam",oriParam);
-        ODOM::oriNow = orientation.data = oriParam;
-        if(oriParam != oriParam_last){
-            if(oriParam == 0){
-                MAP::nodeToGo = 7;
-                MAP::nodeNow = 4;
-            }else if(oriParam == 1){
-                MAP::nodeToGo = 4;
-                MAP::nodeNow = 5;
-            }else if(oriParam == 2){
-                MAP::nodeToGo = 4;
-                MAP::nodeNow = 7;
-            }else if(oriParam == 3){
-                MAP::nodeToGo = 5;
-                MAP::nodeNow = 4;
-            }
-            odometry.x = MAP::node[MAP::nodeNow].second.first;
-            odometry.y = MAP::node[MAP::nodeNow].second.second;
-        }
-
-        if(MAP::nodeNow != -1){
-            double ux = MAP::node[MAP::nodeToGo].second.first;
-            double uy = MAP::node[MAP::nodeToGo].second.second;
-            double vx = MAP::node[MAP::nodeNow].second.first;
-            double vy = MAP::node[MAP::nodeNow].second.second;
-            double x_diff = fabs(ux - vx);
-            double y_diff = fabs(uy - vy);
-            if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
-                ODOM::oriNow = orientation.data = -2;
-        }else{
-            double ux = MAP::node[0].second.first;
-            double uy = MAP::node[0].second.second;
-            double vx = 60;
-            double vy = 180;
-            double x_diff = fabs(ux - vx);
-            double y_diff = fabs(uy - vy);
-            if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
-                ODOM::oriNow = orientation.data = -2;
-        }
-
-
-        orientation_pub.publish(orientation);
-
-        oriParam_last = oriParam;
-        rate.sleep();
-    }
-}
 bool amoungDeg(double a, double b){
     if(b == PI)     return a < b - 0.2;
     if(b >= 0)  return a < b;
@@ -692,8 +334,10 @@ void runInit(ros::NodeHandle& nh){
     node_sub = nh.subscribe("/node_detect",1,nodeCallback);
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
     number_sub = nh.subscribe("/numbers",1,numberCallback);
-    // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
-    odom_sub = nh.subscribe("/realspeed",1,odomCallback);
+
+    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
+    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
+
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
     stickOnLine_sub = nh.subscribe("/stickOnLine",1,stickCallback);
@@ -705,8 +349,6 @@ void runInit(ros::NodeHandle& nh){
     nh.getParam("/tolerence",tolerence);
     nh.getParam("/decelerationZone",decelerationZone);
     nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);
-    nh.getParam("/secondCapt",secondCapt);
-    nh.getParam("/thirdCapt",thirdCapt);
     nh.getParam("/start_now",start_now);
     nh.getParam("/start_togo",start_togo);
     nh.getParam("/time_6",time_6);
@@ -733,12 +375,12 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
     if(CAM::cease)  return;
     if(!RESET::state)   return;
-    ROS_INFO("{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow, ODOM::faceTo);
+    ROS_INFO_THROTTLE(1, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, ODOM::oriNow, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
 }
 void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
     RESET::state = reset_data->data;
-    cout << RESET::state << endl;
+    if(RESET::state == 1 && robot_state == "waiting")    robot_state = "tutorial_move";
 }
