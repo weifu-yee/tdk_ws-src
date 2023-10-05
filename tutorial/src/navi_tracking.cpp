@@ -25,6 +25,7 @@ std_msgs::Bool stick;
 
 bool PID_mode, EX_mode;
 bool _PID_mode;
+int stick_num;
 double V = 0, vel_limit = 0;
 double u_d = 0, u_theta = 0, u = 0;
 geometry_msgs::Twist vel;
@@ -101,9 +102,10 @@ void error_cal(){
     int counter_F,counter_B,total_Err_F,total_Err_B;
     double Err_F,Err_B;
     size_t i;
-    for(i = 0,PID_mode = false,  counter_F = 0,counter_B = 0,total_Err_F = 0,total_Err_B = 0; i < 20; ++i){
+    for(i = 0,PID_mode = false,stick_num = 0,  counter_F = 0,counter_B = 0,total_Err_F = 0,total_Err_B = 0; i < 20; ++i){
             if(std_tracker_data[i] == black){
                 PID_mode = true;
+                stick_num++;
                 if(i <= 5 || i ==19){
                     total_Err_F += weight_array[i];
                     counter_F++;
@@ -214,7 +216,7 @@ int main(int argc, char** argv) {
         nh.getParam("/V",V);
         nh.getParam("/vel_limit",vel_limit);
 
-        if(ori >= 0 && ori < 4 || ori == -2 || ori == 10){
+        if(ori >= 0 && ori < 4 || ori == -2 || ori == 10 || ori == -1){
             if(ori == -2){
                 _phy_maxMS = slowMS;
                 ori = last_ori;
@@ -275,18 +277,12 @@ int main(int argc, char** argv) {
             pub_vel.publish(vel);
 
             if(ori == 10){                
-                if(PID_mode)    stick.data = 1;
+                // if(PID_mode)    stick.data = 1;
+                if(stick_num >= 5)    stick.data = 1;
                 else    stick.data = 0;
                 pub_stickOnLine.publish(stick);
             }
         }
-
-        // tracker_data_std();
-        // PIDMODE();
-        // if(_PID_mode)    stick.data = 1;
-        // else    stick.data = 0;
-        // pub_stickOnLine.publish(stick);
-        // ROS_WARN("stick.data: %d",stick.data);
 
         last_ori = ori;
         ros::Duration(span).sleep();

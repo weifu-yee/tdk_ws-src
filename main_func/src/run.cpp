@@ -169,7 +169,8 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         orientation_pub.publish(orientation);
         
         //節點補償
-        if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
+        // if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
+        if(MAP::nodeLoseConp())     onNode = 1;
 
         //逆時針轉90度
         if(MAP::nodeNow == 12 && !rotate_ed){
