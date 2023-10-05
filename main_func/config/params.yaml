@@ -1,6 +1,9 @@
 freq: 20
-start_now: -1
-start_togo: 0
+# start_now: -1
+# start_togo: 0
+
+start_now: 11
+start_togo: 12
 oriParam: 0
 tolerence: 20
 decelerationZone: 30
@@ -8,7 +11,7 @@ nodeLoseConpDELAY: 2
 secondCapt: 290
 thirdCapt: 400
 after_6_shift: 40
-# time_6: 2
+time_6: 0
 # time_7: 2
-time_6: 30
+# time_6: 30
 time_7: 15

@@ -69,22 +69,32 @@ int main(int argc, char **argv){
     MAP::buildNode();
     MAP::initBuildEdge();
 
-    ODOM::oriNow = orientation.data = MAP::startPointInit(start_now,start_togo);
     ros::Rate rate(freq);
 
     while(nh.ok()){
         switch(RESET::state){
             case 0:
                 while(nh.ok() && !RESET::state){
-                    ros::spinOnce();
                     ROS_ERROR("~~~ Waiting for the switch on ~~~");
+                    ODOM::oriNow = orientation.data = -1;
+                    orientation_pub.publish(orientation);
+                    ros::spinOnce();
                     rate.sleep();
                 }
                 break;
             case 1:
+                ODOM::oriNow = orientation.data = MAP::startPointInit(start_now,start_togo);
                 SCRIPT::firstLevel(nh);
                 ROS_WARN("**************** pass 1st Level!! ****************");
-            case 2:            
+            case 2:
+                while(ODOM::odometry.y < 370 + 50){
+                    ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                    cmd_vel.linear.x = 15;
+                    orientation_pub.publish(orientation);
+                    cmd_vel_pub.publish(cmd_vel);
+                    ros::spinOnce();
+                    rate.sleep();
+                }            
                 SCRIPT::from_A_To_B(nh, -2, 13);
                 SCRIPT::binBaiYa(nh);
                 ROS_WARN("**************** pass binBaiYa!! ****************");
@@ -169,7 +179,8 @@ void SCRIPT::firstLevel(ros::NodeHandle& nh){
         orientation_pub.publish(orientation);
         
         //節點補償
-        if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
+        // if(MAP::nodeLoseConp())     node_detect_pub.publish(ONE);
+        if(MAP::nodeLoseConp())     onNode = 1;
 
         //逆時針轉90度
         if(MAP::nodeNow == 12 && !rotate_ed){

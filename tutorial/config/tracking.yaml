@@ -1,7 +1,7 @@
 # constant
 span: 0.1
-# phy_maxMS: 46
-phy_maxMS: 20
+phy_maxMS: 30
+# phy_maxMS: 20
 slowMS: 15
 
 # soft
@@ -19,19 +19,19 @@ deceleration_minSpeed: 5
 # cmd_vel
 ori: -1
 
-V: 50
-vel_limit: 50
+V: 46
+vel_limit: 20
 
 # transmission fix
 
-vkp: 10
+vkp: 15
 # vkp: 5.0
 vki: 0.0
 vkd: 0.0
 
 # rotation fix
 
-wkp: 0.5
+wkp: 2
 # wkp: 0.9
 wki: 0.0
 wkd: 0.0
