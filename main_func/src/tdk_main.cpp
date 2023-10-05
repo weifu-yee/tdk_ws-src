@@ -99,9 +99,9 @@ int main(int argc, char **argv){
                 break;
             }
             case 1:{
-                if(robot_state == "waiting"){
-                    robot_state = "tutorial_move";
-                }
+                // if(robot_state == "waiting"){
+                //     robot_state = "tutorial_move";
+                // }
                 if(!secRESET){
                     //開相機
                     if(cam_mode_1 < att){
@@ -209,9 +209,12 @@ int main(int argc, char **argv){
                     }
                     
                 }
-                // ROS_WARN("**************** pass 1st Level!! ****************");
+                break;
             }
-            case 2:
+            case 2:{
+                ROS_WARN("**************** pass 1st Level!! ****************");
+
+            }
             break;
         }
 
