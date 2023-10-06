@@ -121,7 +121,11 @@ int MAP::check_onNode(int u){
     if(MAP::nodeNow == -1){
         vx = 60;
         vy = 180;
-    }else{
+    }else if(MAP::nodeNow == -2){
+        vx = 710;
+        vy = 370;
+    }
+    else{
         vx = MAP::node[MAP::nodeNow].second.first;
         vy = MAP::node[MAP::nodeNow].second.second;
     }
@@ -134,10 +138,6 @@ int MAP::check_onNode(int u){
     return 1;
 }
 bool MAP::nodeLoseConp(){
-    if(MAP::check_onNode(MAP::nodeToGo) != 2)   return 0;
-    // if(MAP::nodeToGo - MAP::nodeNow == 3 && MAP::nodeToGo > 3 && MAP::nodeToGo < 7){
-    //     // ROS_INFO("no conp");
-    //     return 0;
-    // }
-    return 1;
+    if(MAP::check_onNode(MAP::nodeToGo) == 2)   return 1;
+    return 0;
 }
