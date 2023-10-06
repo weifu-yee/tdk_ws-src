@@ -5,7 +5,7 @@ start_togo: 0
 oriParam: 0
 tolerence: 30
 decelerationZone: 30
-nodeLoseConpDELAY: 2
+nodeLoseConpDELAY: 15
 # after_6_shift: 40
 # time_6: 30
 # time_7: 15

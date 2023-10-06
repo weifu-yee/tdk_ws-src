@@ -418,6 +418,7 @@ int main(int argc, char **argv){
                     individual_action = Action::odom_move;
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
                     cmd_vel.linear.x = 15;
+                    cmd_vel.linear.y = 0;
                 }else{
                     if(robot_state != "tutorial_move"){
                         ROS_WARN("---------------------------------");
