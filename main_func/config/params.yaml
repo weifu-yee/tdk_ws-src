@@ -8,9 +8,11 @@ decelerationZone: 30
 nodeLoseConpDELAY: 2
 secondCapt: 290
 thirdCapt: 400
-after_6_shift: 40
-# after_6_shift: 2
-time_6: 30
-# time_7: 2
-# time_6: 1
-time_7: 15
+# after_6_shift: 40
+# time_6: 30
+# time_7: 15
+
+
+after_6_shift: 100
+time_6: 3
+time_7: 2

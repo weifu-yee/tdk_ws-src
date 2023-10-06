@@ -35,6 +35,8 @@ int8_t std_tracker_data[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},temp[20]
 // int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
 int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
 
+bool ori10 = false;
+
 
 // 1. tracker data standardrize   robot coordinate convert to tracker coordinate
 class Tracker {
@@ -220,10 +222,19 @@ int main(int argc, char** argv) {
             if(ori == -2){
                 _phy_maxMS = slowMS;
                 ori = last_ori;
-            }else if(ori == -1){
-                ori = last_ori;
             }else{
                 _phy_maxMS = phy_maxMS;
+            }
+
+            if(ori == -1){
+                ori = last_ori;
+            }
+
+            if(ori == 10){
+                ori10 = true;
+                ori = last_ori;
+            }else{
+                ori10 = false;
             }
 
 
@@ -276,7 +287,7 @@ int main(int argc, char** argv) {
             pub_node.publish(node_point);
             pub_vel.publish(vel);
 
-            if(ori == 10){                
+            if(ori10){                
                 // if(PID_mode)    stick.data = 1;
                 if(stick_num >= 5)    stick.data = 1;
                 else    stick.data = 0;
