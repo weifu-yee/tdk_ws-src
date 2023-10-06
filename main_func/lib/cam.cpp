@@ -3,7 +3,7 @@
 
 set<int> CAM::numbers;
 bool CAM::cease = 0;
-double CAM::capt_x[] = {140, 320, 430};
+double CAM::capt_x[] = {120, 320, 430};
 
 void CAM::what_to_erase(int a, int b){
     auto eraseBox = [&](int u){

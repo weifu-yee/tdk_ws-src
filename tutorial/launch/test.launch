@@ -7,20 +7,26 @@
         <param name="baud" value="57600" />
     </node>
 
-    <!-- <node pkg="rosserial_python" type="serial_node.py" name="STM_serial_node">
+    <node pkg="rosserial_python" type="serial_node.py" name="STM_lower_serial_node">
         <param name="port" value="/dev/ttyUSB0" />
+        <param name="baud" value="57600" />
+    </node>
+
+    <!-- <node pkg="rosserial_python" type="serial_node.py" name="STM_upper_serial_node">
+        <param name="port" value="/dev/ttyACM0" />
         <param name="baud" value="57600" />
     </node> -->
 
-    <node name="comm_vel" pkg="tutorial" type="comm_vel">
-    </node>
+    
     <!-- <node name="comm_vel" pkg="tutorial" type="comm_vel" output="screen">
     </node> -->
 
     <!-- navigation -->
     <node name="navi_tracking" pkg="tutorial" type="navi_tracking" output="screen">
     </node>
-  
+
+    <node name="comm_vel" pkg="tutorial" type="comm_vel">
+    </node>
     <!-- <node name="debug" pkg="tutorial" type="debug" output="screen">
     </node> -->
 </launch>
