@@ -71,6 +71,7 @@ bool stick = 0;
 bool secRESET = 0;
 int cam_mode_1 = 0;
 int ori6State = 0;
+int ori7State = 0;
 int op;
 int cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
 double degrees[] = {0, PI/2, PI, -PI/2};
@@ -123,7 +124,7 @@ int main(int argc, char **argv){
     
     
     while(nh.ok()){
-
+        //重置狀態
         switch(reset_state){
             case Reset::wait:{
                 if(last_reset_state != reset_state){       //中途重置
@@ -200,7 +201,7 @@ int main(int argc, char **argv){
             
         }
         last_reset_state = reset_state;
-
+        //執行中的階段
         switch(level_ing){
             case Level::the_wait:{
                 break;
@@ -278,7 +279,7 @@ int main(int argc, char **argv){
                     }
                     ODOM::odometry.x = 270;
                     //跨坎補償
-                    if(ori6State++ == time_6*freq){
+                    if(++ori6State == time_6*freq){
                         robot_state = "calibration";
                         stick = 0;
                         stick_times = 0;
@@ -364,6 +365,28 @@ int main(int argc, char **argv){
                     cout<<endl; ROS_WARN("Level::binBaiYa"); cout<<endl;
                 }
 
+                robot_state = "tutorial_move";
+                individual_action = Action::tutorial_move;
+
+                if(MAP::nodeNow == 16 && ori7State < (int)time_7*freq){
+                    robot_state = "script_binBaiYa";
+                    individual_action = Action::script_binBaiYa;
+                    if(++ori7State == time_7*freq){
+                        ROS_WARN("script_binBaiYa --- complete!!");
+                        ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                        orientation_pub.publish(orientation);
+                        robot_state = "tutorial_move";
+                        individual_action = Action::tutorial_move;
+                    }
+                }
+
+                if(MAP::nodeNow == 13 && MAP::nodeToGo == 14){
+                    ROS_WARN("---------------------------------");
+                    ROS_ERROR("Done::_binBaiYa = true!!");
+                    robot_state = "waiting";
+                    Done::_binBaiYa = true;
+                    individual_action = Action::waiting;        //to delete
+                }
 
                 break;
             }
@@ -384,7 +407,7 @@ int main(int argc, char **argv){
             }
         }
         last_level_ing = level_ing;
-
+        //獨立的動作們
         switch(individual_action){
             case Action::waiting:{
                 // ROS_ERROR_THROTTLE(1, "~~~ Waiting for the switch on ~~~");
@@ -507,6 +530,9 @@ int main(int argc, char **argv){
                 break;
             }
             case Action::script_binBaiYa:{
+                ROS_WARN_THROTTLE(1," \"7\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori7State/20 + 1, time_7);
+                ODOM::oriNow = orientation.data = 7;
+                orientation_pub.publish(orientation);
                 break;
             }
             case Action::dustBox:{
