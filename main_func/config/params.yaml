@@ -6,11 +6,11 @@ oriParam: 0
 tolerence: 30
 decelerationZone: 30
 nodeLoseConpDELAY: 2
-after_6_shift: 40
+# after_6_shift: 40
 # time_6: 30
-time_7: 15
+# time_7: 15
 
 
-# after_6_shift: 100
+after_6_shift: 100
 time_6: 3
-# time_7: 2
+time_7: 2

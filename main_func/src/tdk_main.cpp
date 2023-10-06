@@ -15,7 +15,26 @@ enum Reset{
     sec_pass_badminton,
     sec_last_binBaiYa,
     sec_last_dustBox,
-    sec_last_badminton
+    sec_last_badminton,
+    complete
+};
+enum Level{
+    first,
+    sec_move_1,
+    binBaiYa,
+    sec_move_2,
+    baseball,
+    badminton,
+    sec_move_3
+};
+namespace Done{
+    bool _first = 0;
+    bool _sec_move_1 = 0;
+    bool _binBaiYa = 0;
+    bool _sec_move_2 = 0;
+    bool _baseball = 0;
+    bool _badminton = 0;
+    bool _sec_move_3 = 0;
 };
 enum Action{
     waiting,
@@ -25,11 +44,12 @@ enum Action{
     capture_n_detect,
     over_hurdles,
     calibration,
-    binBaiYa,
+    script_binBaiYa,
     dustBox
 };
 
 Reset reset_state = Reset::wait;
+Level level_ing = Level::first;
 Action individual_action = Action::waiting;
 string robot_state;
 
@@ -102,7 +122,7 @@ int main(int argc, char **argv){
     
     while(nh.ok()){
 
-        switch(RESET::state){
+        switch(reset_state){
             case 0:{
                 if(robot_state != "waiting"){       //中途重置
                     ROS_ERROR("midway reset Q_Q");
@@ -460,6 +480,20 @@ void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     // ROS_ERROR("stick: %d",stick);
 }
 void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
+    switch(reset_data->data){
+        case 0:     reset_state = Reset::wait;      break;
+        case 1:     reset_state = Reset::all_run;      break;
+        case 2:     reset_state = Reset::sec_all_run;      break;
+        case 3:     reset_state = Reset::sec_pass_binBaiYa;      break;
+        case 4:     reset_state = Reset::sec_pass_dustBox;      break;
+        case 5:     reset_state = Reset::sec_pass_badminton;      break;
+        case 6:     reset_state = Reset::sec_last_binBaiYa;      break;
+        case 7:     reset_state = Reset::sec_last_dustBox;      break;
+        case 8:     reset_state = Reset::sec_last_badminton;      break;
+        case 9:     reset_state = Reset::complete;      break;
+        default:     reset_state = Reset::wait;      break;
+    }
+
     RESET::state = reset_data->data;
     if(RESET::state == 1 && robot_state == "waiting")    robot_state = "tutorial_move";
 }
