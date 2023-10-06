@@ -128,6 +128,7 @@ int main(int argc, char **argv){
             case Reset::wait:{
                 if(last_reset_state != reset_state){       //中途重置
                     cout<<endl; ROS_ERROR("\nmidway reset Q_Q\n"); cout<<endl;
+                    MAP::initBuildEdge();
                 }
 
                 level_ing = Level::the_wait;
@@ -151,12 +152,46 @@ int main(int argc, char **argv){
                     capt_ed_times = 0;
                     ori6State = 0;
                     rotate_ed = 0;
+                    onNode = false;
                 }
 
                 level_ing = Level::first;
                 if(Done::_first)    level_ing = Level::sec_move_1;
                 if(Done::_sec_move_1)    level_ing = Level::binBaiYa;
                 if(Done::_binBaiYa)    level_ing = Level::sec_move_2;
+                if(Done::_sec_move_2)    level_ing = Level::baseball;
+                if(Done::_baseball)    level_ing = Level::badminton;
+                if(Done::_badminton)    level_ing = Level::complete;
+                break;
+            }
+            case Reset::sec_all_run:{
+                if(last_reset_state != reset_state){       //初始化
+                    cout<<endl; ROS_ERROR("Reset::sec_all_run"); cout<<endl;
+
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    MAP::nodeNow = 12;
+                    onNode = false;
+                }
+
+                level_ing = Level::sec_move_1;
+                if(Done::_sec_move_1)    level_ing = Level::binBaiYa;
+                if(Done::_binBaiYa)    level_ing = Level::sec_move_2;
+                if(Done::_sec_move_2)    level_ing = Level::baseball;
+                if(Done::_baseball)    level_ing = Level::badminton;
+                if(Done::_badminton)    level_ing = Level::complete;
+                break;
+            }
+            case Reset::sec_pass_binBaiYa:{
+                if(last_reset_state != reset_state){       //初始化
+                    cout<<endl; ROS_ERROR("Reset::sec_pass_binBaiYa"); cout<<endl;
+
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    MAP::nodeNow = 12;
+                    onNode = false;
+                }
+
+                level_ing = Level::sec_move_1;
+                if(Done::_sec_move_1)    level_ing = Level::sec_move_2;
                 if(Done::_sec_move_2)    level_ing = Level::baseball;
                 if(Done::_baseball)    level_ing = Level::badminton;
                 if(Done::_badminton)    level_ing = Level::complete;
@@ -171,8 +206,9 @@ int main(int argc, char **argv){
                 break;
             }
             case Level::first:{
-                if(last_level_ing != level_ing){
+                if(last_level_ing != level_ing){    //初始化
                     cout<<endl; ROS_WARN("Level::first"); cout<<endl;
+                    robot_state = "tutorial_move";
                 }
                 //開相機
                 if(cam_mode_1 < att){
@@ -290,20 +326,19 @@ int main(int argc, char **argv){
                     if(!(odometry.x < 710 || odometry.y < 370)){
                         ROS_WARN("---------------------------------");
                         ROS_ERROR("Done::_first = true!!");
-                        robot_state = "waiting";
                         Done::_first = true;
                     }
                 }
                 break;
             }
             case Level::sec_move_1:{
+                if(last_level_ing != level_ing){    //初始化
+                    cout<<endl; ROS_WARN("Level::sec_move_1"); cout<<endl;
+                }
                 //偏移至第二重置框框外
                 if(odometry.y < 420){
-                    if(robot_state != "odom_move"){
-                        ROS_WARN("---------------------------------");
-                        ROS_WARN("shifting to stick on Line(odom_move)");
-                    }
                     robot_state = "odom_move";
+                    individual_action = Action::odom_move;
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
                     cmd_vel.linear.x = 15;
                 }else{
@@ -313,7 +348,7 @@ int main(int argc, char **argv){
                     }
                     robot_state = "tutorial_move";
                     individual_action = Action::tutorial_move;
-                    ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                    ODOM::oriNow = orientation.data = 0;
                 }
                 //開到13
                 if(MAP::nodeNow == 13){
@@ -325,6 +360,11 @@ int main(int argc, char **argv){
                 break;
             }
             case Level::binBaiYa:{
+                if(last_level_ing != level_ing){    //初始化
+                    cout<<endl; ROS_WARN("Level::binBaiYa"); cout<<endl;
+                }
+
+
                 break;
             }
             case Level::sec_move_2:{
