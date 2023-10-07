@@ -1,4 +1,4 @@
-odom_mode: 1
+odom_mode: 0
 freq: 20
 
 start_now: -1

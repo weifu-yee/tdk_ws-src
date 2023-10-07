@@ -22,13 +22,15 @@ def detect_img():
     img_path = f"/home/ditrobotics/tdk_ws/src/yolov8/jpg/capture.jpg"
     results = model.predict(source=img_path, save=True)
     rospy.loginfo("[3] Detect Finished")
-    
-    rospy.loginfo(results)
-
+  
     # Get detected class name
+    names = model.names
     cls_name = []
+    
     for r in results:
-        cls_name.extend(r.boxes.boxes[:, -1].tolist())
+        for c in r.boxes.cls:
+            cls_name.append(names[int(c)])        
+    print(cls_name)
     
     # update msg
     msg.data = [int(x + 1) for x in cls_name]
@@ -39,8 +41,8 @@ def detect_img():
 
 def main():
     rospy.init_node('detect_node')
-    rospy.Subscriber('/detect', Bool, detect_callback)  # Create subscriber
-    rospy.spin()  # Keep the node running until it's shut down
+    rospy.Subscriber('/detect', Bool, detect_callback)
+    rospy.spin() 
 
 if __name__ == '__main__':
     main()
