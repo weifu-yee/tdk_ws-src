@@ -45,10 +45,13 @@ enum Action{
     capture_n_detect,
     over_hurdles,
     calibration,
-    script_binBaiYa,
-    dustBox
+    script_binBaiYa
 };
 
+namespace sideAction{
+    bool SHOOTER = 0;
+    bool DUSTBOX = 0;
+}
 Reset reset_state = Reset::wait;
 Reset last_reset_state = Reset::wait;
 Level level_ing = Level::the_wait;
@@ -79,8 +82,10 @@ double degrees[] = {0, PI/2, PI, -PI/2};
 double thetaToGo;
 int after_6_shift_state = 0;
 int stick_times = 0;
+double Y_shifting_dustBox = 0;
+int laji_process_state = 0;
 
-int laji_ok_state = -1;
+int laji_ok_state = 0, laji_ok_state_last = 0;
 int shooter_ok_state = -1;
 //publisher
 ros::Publisher orientation_pub;
@@ -102,6 +107,7 @@ std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
 std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
+geometry_msgs::Point cmd_angle;
 geometry_msgs::Twist rotate_ang;
 
 //initialization
@@ -127,6 +133,7 @@ void GetParam(ros::NodeHandle& nh){
     nh.getParam("/start_togo",start_togo);
     nh.getParam("/after_6_shift",after_6_shift);
     nh.getParam("/X_after_over_hurdles",X_after_over_hurdles);
+    nh.getParam("/Y_shifting_dustBox",Y_shifting_dustBox);
     if(!odom_mode){
         ROS_ERROR("^^^^^^^^^^^^^^^^^^fake_odom !!!^^^^^^^^^^^^^^^^^^");
         odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
@@ -163,6 +170,18 @@ int main(int argc, char **argv){
                 Done::_baseball = 0;
                 Done::_badminton = 0;
                 Done::_sec_move_3 = 0;
+                capt_ed_times = 0;
+                ori6State = 0;
+                after_6_shift_state = 0;
+                rotate_ed = 0;
+                ori7State = 0;
+                laji_process_state = 0;
+                cmd_vel.linear.x = 0;
+                cmd_vel.linear.y = 0;
+                cmd_vel.angular.z = 0;
+                sideAction::DUSTBOX = false;
+                sideAction::SHOOTER = false;
+
                 robot_state = "waiting";
                 individual_action = Action::waiting;
                 break;
@@ -172,7 +191,6 @@ int main(int argc, char **argv){
                     cout<<endl; ROS_ERROR("Reset::all_run"); cout<<endl;
 
                     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now, start_togo);
-                    MAP::eraseEdge(start_now, start_togo);
 
                     for(int i = 0; i <= 2; i++){
                         if(ODOM::odometry.x < CAM::capt_x[i]){
@@ -551,11 +569,73 @@ int main(int argc, char **argv){
             case Level::baseball:{
                 if(last_level_ing != level_ing){    //初始化
                     cout<<endl; ROS_WARN("____________Level::baseball____________"); cout<<endl;
+                    ROS_ERROR("laji_process_state: %d",laji_process_state);
                 }
-                cmd_laji.data = 1;
-                cmd_laji_pub.publish(cmd_laji);
+
+                //14開到17      同時放下母車
+                if(laji_process_state == 0){
+                    sideAction::DUSTBOX = true;
+                    cmd_laji.data = 1;
+                    robot_state = "tutorial_move";
+                    individual_action = Action::tutorial_move;
+                    if(MAP::nodeNow == 17){
+                        laji_process_state ++;
+                        ROS_WARN_THROTTLE(1, "waiting the dustBox set up to grab");
+                        ROS_ERROR("laji_process_state: %d",laji_process_state);
+                    }
+                }
+                //到17等待laji_ok
+                if(laji_process_state == 1){
+                    robot_state = "waiting";
+                    individual_action = Action::waiting;
+                    if(laji_ok_state){
+                        laji_process_state ++;
+                        ROS_WARN("---------------------------------");
+                        ROS_WARN("the dustBox is setted up to grab, now go ahead a little !!!");
+                        ROS_ERROR("laji_process_state: %d",laji_process_state);
+                    }
+                }
+                //往前走一小段
+                if(laji_process_state == 2){
+                    robot_state = "odom_move";
+                    individual_action = Action::odom_move;
+                    ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                    cmd_vel.linear.x = -5;
+                    cmd_vel.linear.y = 0;
+                    if(ODOM::odometry.y >= MAP::node_y(17) + Y_shifting_dustBox){
+                        laji_process_state ++;
+                        ROS_WARN("---------------------------------");
+                        ROS_WARN_THROTTLE(1, "waiting the dustBox pull the balls on car");
+                        ROS_ERROR("laji_process_state: %d",laji_process_state);
+                    }
+                }
+                //等待倒球
+                if(laji_process_state == 3){
+                    robot_state = "waiting";
+                    individual_action = Action::waiting;
+                    cmd_laji.data = 2;
+
+                    if(laji_ok_state && !laji_ok_state_last){
+                        ODOM::oriNow = orientation.data = 0;
+                        laji_process_state ++;
+                        sideAction::SHOOTER = true;
+                        cmd_angle.x = 2;
+
+                        ROS_WARN("---------------------------------");
+                        ROS_WARN_THROTTLE(1, "put down the box and go !!!");
+                        ROS_ERROR("laji_process_state: %d",laji_process_state);
+                    }
+                }
+                //放下箱子，拖著走
+                if(laji_process_state == 4){
+                    robot_state = "tutorial_move";
+                    individual_action = Action::tutorial_move;
+                    cmd_laji.data = 1;
+                }
+                laji_ok_state_last = laji_ok_state;
+
                 
-                if(1){
+                if(laji_process_state == 4 && MAP::nodeNow == 14){
                     ROS_WARN("---------------------------------");
                     ROS_ERROR("Done::_baseball = true!!");
                     robot_state = "waiting";
@@ -625,8 +705,8 @@ int main(int argc, char **argv){
                     }
                     //更新現在的node
                     MAP::nodeNow = MAP::nodeToGo;
-                    odometry.x = MAP::node[MAP::nodeNow].second.first;
-                    odometry.y = MAP::node[MAP::nodeNow].second.second;
+                    odometry.x = MAP::node_x(MAP::nodeNow);
+                    odometry.y = MAP::node_y(MAP::nodeNow);
                     //更新要去的node
                     auto arr = MAP::adj_list[MAP::nodeNow];
                     int max = -1;
@@ -726,13 +806,20 @@ int main(int argc, char **argv){
                 orientation_pub.publish(orientation);
                 break;
             }
-            case Action::dustBox:{
-                break;
-            }
         }
 
-        //同時進行動作們
-        if(1){}
+        //同時進行動作們        sideAction
+        if(sideAction::DUSTBOX){
+            cmd_laji_pub.publish(cmd_laji);
+            ROS_WARN_THROTTLE(1,"cmd_laji: %d",cmd_laji.data);
+            if(Done::_baseball && laji_ok_state)    sideAction::DUSTBOX = false;
+        }
+        if(sideAction::SHOOTER){
+            cmd_angle_pub.publish(cmd_angle);
+            ROS_WARN_THROTTLE(1,"cmd_angle: (%f, %f, %f)",cmd_angle.x, cmd_angle.y, cmd_angle.z);
+        }
+
+
         ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
         ros::spinOnce();
         rate.sleep();
@@ -756,7 +843,7 @@ void runInit(ros::NodeHandle& nh){
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     cmd_laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
-    cmd_angle_pub = nh.advertise<std_msgs::Int8>("/cmd_angle", 1);
+    cmd_angle_pub = nh.advertise<geometry_msgs::Point>("/cmd_angle", 1);
 
     odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
     // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom

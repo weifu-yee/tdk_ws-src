@@ -1,8 +1,13 @@
+V: 100
+phy_maxMS: 200
+# V: 30
+# phy_maxMS: 30
+
 odom_mode: 0
 freq: 20
 
-start_now: 32
-start_togo: 13
+start_now: 31
+start_togo: 0
 
 oriParam: 0
 tolerence: 30
@@ -10,12 +15,12 @@ decelerationZone: 30
 nodeLoseConpDELAY: 15
 X_after_over_hurdles: 300
 after_6_shift: 40
+Y_shifting_dustBox: 10
 
 
 # constant
 span: 0.1
 # phy_maxMS: 30
-phy_maxMS: 200
 slowMS: 15
 
 # soft
@@ -34,7 +39,6 @@ deceleration_minSpeed: 5
 ori: -1
 
 # V: 30
-V: 100
 vel_limit: 20
 w_limit: 10000
 
@@ -49,3 +53,5 @@ vkd: 0.0
 wkp: 1.6
 wki: 0.005
 wkd: 0.0
+
+

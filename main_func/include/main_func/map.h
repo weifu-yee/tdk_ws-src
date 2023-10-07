@@ -16,6 +16,7 @@
 #include "std_msgs/Int64.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "geometry_msgs/Twist.h"
+#include "geometry_msgs/Point.h"
 
 #include "cammera.h"
 #include "odom.h"

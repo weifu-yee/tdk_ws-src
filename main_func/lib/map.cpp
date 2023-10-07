@@ -53,9 +53,9 @@ double MAP::node_y(int u){
 int MAP::startPointInit(int now,int togo){
     MAP::nodeNow = now;
     MAP::nodeToGo = togo;
-
     ODOM::odometry.x = MAP::node_x(now);
     ODOM::odometry.y = MAP::node_y(now);
+    MAP::eraseEdge(now, togo);
     
     ODOM::faceTo = 0;
     if(togo >= 13 && togo <= 30){
