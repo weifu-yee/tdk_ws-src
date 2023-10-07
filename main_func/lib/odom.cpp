@@ -40,24 +40,27 @@ Odometry ODOM::odometry(0, 0, 0);
 int ODOM::oriNow = 0;
 int ODOM::faceTo = 0;
 bool ODOM::slow(int nodeToGo){
-    if(nodeNow != -1){
-        double ux = MAP::node[nodeToGo].second.first;
-        double uy = MAP::node[nodeToGo].second.second;
-        double vx = MAP::node[MAP::nodeNow].second.first;
-        double vy = MAP::node[MAP::nodeNow].second.second;
-        double x_diff = fabs(ux - vx);
-        double y_diff = fabs(uy - vy);
-        if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
-            return true;
-    }else{
-        double ux = MAP::node[0].second.first;
-        double uy = MAP::node[0].second.second;
-        double vx = 60;
-        double vy = 180;
-        double x_diff = fabs(ux - vx);
-        double y_diff = fabs(uy - vy);
-        if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
-            return true;
-    }
+    if(MAP::disToOdom(nodeToGo) < decelerationZone)     return true;
+
+
+    // if(nodeNow != -1){
+    //     double ux = MAP::node[nodeToGo].second.first;
+    //     double uy = MAP::node[nodeToGo].second.second;
+    //     double vx = MAP::node[MAP::nodeNow].second.first;
+    //     double vy = MAP::node[MAP::nodeNow].second.second;
+    //     double x_diff = fabs(ux - vx);
+    //     double y_diff = fabs(uy - vy);
+    //     if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
+    //         return true;
+    // }else{
+    //     double ux = MAP::node[0].second.first;
+    //     double uy = MAP::node[0].second.second;
+    //     double vx = 60;
+    //     double vy = 180;
+    //     double x_diff = fabs(ux - vx);
+    //     double y_diff = fabs(uy - vy);
+    //     if(MAP::disToOdom(MAP::nodeNow) > (x_diff + y_diff - decelerationZone))
+    //         return true;
+    // }
     return false;
 }

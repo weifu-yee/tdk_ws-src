@@ -108,7 +108,10 @@ int MAP::check_onNode(int u){
     double y_diff = fabs(uy - vy);
     double disNow = disToOdom(MAP::nodeNow);
     if(disNow < (x_diff + y_diff - tolerence))    return 0;
-    if(disNow > (x_diff + y_diff + nodeLoseConpDELAY))    return 2;
+    if(disNow > (x_diff + y_diff + nodeLoseConpDELAY)){
+        if(MAP::nodeNow == 16 && u == 13 && ODOM::odometry.y > MAP::node_y(16)) ;
+        else        return 2;
+    }
     
     return 1;
 }

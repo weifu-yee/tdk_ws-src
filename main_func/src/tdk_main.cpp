@@ -45,7 +45,8 @@ enum Action{
     capture_n_detect,
     over_hurdles,
     calibration,
-    script_binBaiYa
+    script_binBaiYa,
+    teleop      //just for debug's convenience
 };
 
 namespace sideAction{
@@ -70,6 +71,7 @@ bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 bool rotate_ed = 0;
 double X_after_over_hurdles = 300;
+double Y_shifting_after_binBaiYa = 110;
 double after_6_shift = 40;
 bool stick = 0;
 bool secRESET = 0;
@@ -84,6 +86,7 @@ int after_6_shift_state = 0;
 int stick_times = 0;
 double Y_shifting_dustBox = 0;
 int laji_process_state = 0;
+int midway_reset_pub_0_times = 0;
 
 int laji_ok_state = 0, laji_ok_state_last = 0;
 int shooter_ok_state = -1;
@@ -160,8 +163,8 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //中途重置
                     cout<<endl; ROS_ERROR("\nmidway reset Q_Q\n"); cout<<endl;
                     MAP::initBuildEdge();
+                    midway_reset_pub_0_times = 0;
                 }
-
                 level_ing = Level::the_wait;
                 Done::_first = 0;
                 Done::_sec_move_1 = 0;
@@ -184,6 +187,10 @@ int main(int argc, char **argv){
 
                 robot_state = "waiting";
                 individual_action = Action::waiting;
+
+                if(midway_reset_pub_0_times++ > att){
+                    individual_action = Action::teleop;
+                }
                 break;
             }
             case Reset::all_run:{
@@ -505,8 +512,9 @@ int main(int argc, char **argv){
 
                 if(ori7State && robot_state == "script_binBaiYa"){
                     ROS_WARN("script_binBaiYa --- complete!!");
-                    ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                    ODOM::oriNow = orientation.data = 2;
                     orientation_pub.publish(orientation);
+                    ODOM::odometry.y = MAP::node_y(16) +Y_shifting_after_binBaiYa;
                 }
 
                 robot_state = "tutorial_move";
@@ -805,6 +813,10 @@ int main(int argc, char **argv){
                 ODOM::oriNow = orientation.data = 7;
                 orientation_pub.publish(orientation);
                 break;
+            }
+            case Action::teleop:{
+                ODOM::oriNow = orientation.data = 10;
+                orientation_pub.publish(orientation);
             }
         }
 
