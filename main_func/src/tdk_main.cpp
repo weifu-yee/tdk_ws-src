@@ -67,7 +67,6 @@ bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 bool rotate_ed = 0;
 double X_after_over_hurdles = 300;
-int time_6 = 30, time_7 = 15;
 double after_6_shift = 40;
 bool stick = 0;
 bool secRESET = 0;
@@ -80,14 +79,16 @@ double degrees[] = {0, PI/2, PI, -PI/2};
 double thetaToGo;
 int after_6_shift_state = 0;
 int stick_times = 0;
+
+int laji_ok_state = -1;
+int shooter_ok_state = -1;
 //publisher
 ros::Publisher orientation_pub;
 ros::Publisher cmd_vel_pub;
 ros::Publisher cam_pub;
 ros::Publisher node_detect_pub;
-ros::Publisher laji_pub;
+ros::Publisher cmd_laji_pub;
 ros::Publisher cmd_angle_pub;
-
 //subscriber
 ros::Subscriber node_sub;
 ros::Subscriber number_sub;
@@ -95,14 +96,13 @@ ros::Subscriber odom_sub;
 ros::Subscriber stickOnLine_sub;
 ros::Subscriber reset_sub;
 ros::Subscriber laji_ok_sub;
-ros::Subscriber _sub;
+ros::Subscriber shooter_ok_sub;
 //msgs
 std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
 std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
 geometry_msgs::Twist rotate_ang;
-std_msgs::Bool ONE;
 
 //initialization
 void runInit(ros::NodeHandle& nh);
@@ -123,8 +123,6 @@ void GetParam(ros::NodeHandle& nh){
     nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);
     nh.getParam("/start_now",start_now);
     nh.getParam("/start_togo",start_togo);
-    nh.getParam("/time_6",time_6);
-    nh.getParam("/time_7",time_7);
     nh.getParam("/after_6_shift",after_6_shift);
     nh.getParam("/X_after_over_hurdles",X_after_over_hurdles);
     if(!odom_mode){
@@ -140,16 +138,11 @@ void GetParam(ros::NodeHandle& nh){
 int main(int argc, char **argv){
     ros::init(argc, argv, "tdk_main");
     ros::NodeHandle nh;
-
     MAP::buildNode();
     MAP::initBuildEdge();
-
     runInit(nh);
     GetParam(nh);
-
     ros::Rate rate(freq);
-    
-    
     while(nh.ok()){
 
         //重置狀態
@@ -551,6 +544,9 @@ int main(int argc, char **argv){
                 if(last_level_ing != level_ing){    //初始化
                     cout<<endl; ROS_WARN("____________Level::baseball____________"); cout<<endl;
                 }
+                cmd_laji.data = 1;
+                cmd_laji_pub.publish(cmd_laji);
+                
                 if(1){
                     ROS_WARN("---------------------------------");
                     ROS_ERROR("Done::_baseball = true!!");
@@ -728,9 +724,6 @@ int main(int argc, char **argv){
         }
 
         ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
-        // ROS_WARN("robot_state: %s",robot_state.c_str());
-
-
         ros::spinOnce();
         rate.sleep();
     }
@@ -750,18 +743,19 @@ bool amoungDeg(double a, double b){
 void runInit(ros::NodeHandle& nh){
     orientation_pub = nh.advertise<std_msgs::Int8>("/cmd_ori", 1);
     cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-    node_sub = nh.subscribe("/node_detect",1,nodeCallback);
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
-    number_sub = nh.subscribe("/numbers",1,numberCallback);
-    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
-    // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
-
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
-    laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
+    cmd_laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
+    cmd_angle_pub = nh.advertise<std_msgs::Int8>("/cmd_angle", 1);
+
+    odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
+    // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
+    number_sub = nh.subscribe("/numbers",1,numberCallback);
+    node_sub = nh.subscribe("/node_detect",1,nodeCallback);
     stickOnLine_sub = nh.subscribe("/stickOnLine",1,stickCallback);
     reset_sub = nh.subscribe("/reset",1,reset_callback);
-
-    ONE.data = 1;
+    laji_ok_sub = nh.subscribe("/laji_ok",1,laji_ok_callback);
+    shooter_ok_sub = nh.subscribe("/shooter_ok",1,shooter_ok_callback);
 }
 
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
@@ -792,7 +786,6 @@ void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
     if(stick == false)  stick_times = 0;
     else    stick_times ++;
-    // ROS_ERROR("stick: %d",stick);
 }
 void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
     switch(reset_data->data){
@@ -806,4 +799,10 @@ void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
         case 7:     reset_state = Reset::sec_last_baseball;      break;
         case 8:     reset_state = Reset::sec_last_badminton;      break;
     }
+}
+void laji_ok_callback(const std_msgs::Int8::ConstPtr& laji_ok_data){
+    laji_ok_state = laji_ok_data->data;
+}
+void shooter_ok_callback(const std_msgs::Int8::ConstPtr& shooter_ok_data){
+    shooter_ok_state = shooter_ok_data->data;
 }
