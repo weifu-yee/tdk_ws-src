@@ -1,5 +1,4 @@
 <launch>
     <include file = "$(find tutorial)/launch/test.launch" />
-    <rosparam file="$(find main_func)/config/params.yaml" command="load" />
     <node pkg="main_func" type="tdk_main" name="tdk_main"  output="screen"/>
 </launch>
