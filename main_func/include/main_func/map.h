@@ -23,7 +23,7 @@
 // #define initBuildEdgeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/initBuildEdge.yaml"
 #define buildNodeFilePath "/root/tdk_ws/src/main_func/params/buildNode.yaml"
 #define initBuildEdgeFilePath "/root/tdk_ws/src/main_func/params/initBuildEdge.yaml"
-#define num_of_nodes 18
+#define num_of_nodes 33
 
 using namespace std;
 
@@ -36,8 +36,11 @@ namespace MAP{
     extern int nodeNow, nodeToGo;
     extern vector<pair<int, pair<double, double>>> node;    //<index, x, y>
     extern vector<set<int>> adj_list;     //adjacency_list
+
     void buildNode();
     void initBuildEdge();
+    double node_x(int u);
+    double node_y(int u);
     int startPointInit(int now,int togo);
     void eraseEdge(int u, int v);
     int cmd_ori(int u, int v);

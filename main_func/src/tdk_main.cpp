@@ -59,7 +59,7 @@ string robot_state = "waiting";
 //global vars
 int odom_mode = 1;
 int odom_mode_last = 1;
-int start_now = -1, start_togo = 0;
+int start_now = 31, start_togo = 0;
 bool isNodeLast = false;
 bool onNode = false;
 double xNow, xLast = -1;
@@ -113,6 +113,8 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers);
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel);
 void stickCallback(const std_msgs::Bool::ConstPtr& sitck_);
 void reset_callback(const std_msgs::Int64::ConstPtr& reset_data);
+void laji_ok_callback(const std_msgs::Int8::ConstPtr& laji_ok_data);
+void shooter_ok_callback(const std_msgs::Int8::ConstPtr& shooter_ok_data);
 
 bool amoungDeg(double a, double b);
 void GetParam(ros::NodeHandle& nh){
@@ -170,7 +172,7 @@ int main(int argc, char **argv){
                     cout<<endl; ROS_ERROR("Reset::all_run"); cout<<endl;
 
                     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now, start_togo);
-                    MAP::initBuildEdge();
+                    MAP::eraseEdge(start_now, start_togo);
 
                     for(int i = 0; i <= 2; i++){
                         if(ODOM::odometry.x < CAM::capt_x[i]){
@@ -180,10 +182,10 @@ int main(int argc, char **argv){
                         else    capt_ed_times = i + 1;
                     }
 
-                    if(start_now <= 3)  ori6State = 0;
+                    if(start_now <= 3 || start_now == 31)  ori6State = 0;
                     else ori6State = 1;
 
-                    if(start_now < 12)  rotate_ed = 0;
+                    if(start_now < 12 || start_now == 31)  rotate_ed = 0;
                     else rotate_ed = 1;
 
                     ROS_ERROR("capt_ed_times: %d, ori6State: %d, rotate_ed:%d",capt_ed_times,ori6State,rotate_ed);

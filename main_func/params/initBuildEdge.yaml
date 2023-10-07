@@ -1,3 +1,4 @@
+- initEdge: [31,0]
 - initEdge: [0,1]
 - initEdge: [0,2]
 - initEdge: [1,4]

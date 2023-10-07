@@ -1,7 +1,7 @@
 odom_mode: 0
 freq: 20
 
-start_now: -1
+start_now: 31
 start_togo: 0
 
 oriParam: 0
@@ -10,13 +10,6 @@ decelerationZone: 30
 nodeLoseConpDELAY: 15
 X_after_over_hurdles: 300
 after_6_shift: 40
-# time_6: 30
-time_7: 30
-
-
-# after_6_shift: 100
-time_6: 3
-# time_7: 2
 
 
 # constant
