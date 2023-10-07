@@ -182,8 +182,14 @@ int main(int argc, char **argv){
                         else    capt_ed_times = i + 1;
                     }
 
-                    if(start_now <= 3 || start_now == 31)  ori6State = 0;
-                    else ori6State = 1;
+                    if(start_now <= 3 || start_now == 31){
+                        ori6State = 0;
+                        after_6_shift_state = 0;
+                    }
+                    else{
+                        ori6State = 1;
+                        after_6_shift_state = 2;
+                    }
 
                     if(start_now < 12 || start_now == 31)  rotate_ed = 0;
                     else rotate_ed = 1;
@@ -206,7 +212,7 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::sec_all_run"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(32, 13);
                     MAP::nodeNow = 12;
                     onNode = false;
                 }
@@ -223,7 +229,7 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::sec_pass_binBaiYa"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(32, 13);
                     MAP::nodeNow = 12;
                     onNode = false;
                 }
@@ -239,7 +245,7 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::sec_pass_baseball"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(32, 13);
                     MAP::nodeNow = 12;
                     onNode = false;
                 }
@@ -255,7 +261,7 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::sec_pass_badminton"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(32, 13);
                     MAP::nodeNow = 12;
                     onNode = false;
                 }
@@ -271,7 +277,7 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::sec_last_binBaiYa"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(32, 13);
                     MAP::nodeNow = 12;
                     onNode = false;
                 }
@@ -285,7 +291,7 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::sec_last_baseball"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(32, 13);
                     MAP::nodeNow = 12;
                     onNode = false;
                 }
@@ -300,7 +306,7 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::sec_last_badminton"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-2, 13);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(32, 13);
                     MAP::nodeNow = 12;
                     onNode = false;
                 }
@@ -697,7 +703,7 @@ int main(int argc, char **argv){
             case Action::calibration:{
                 ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
                 if(after_6_shift_state == 0){
-                    if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
+                    if(ODOM::odometry.y > MAP::node_y(MAP::nodeNow) - after_6_shift){
                         cmd_vel.linear.y = -15;
                     }else{
                         after_6_shift_state ++;
@@ -725,6 +731,8 @@ int main(int argc, char **argv){
             }
         }
 
+        //同時進行動作們
+        if(1){}
         ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
         ros::spinOnce();
         rate.sleep();

@@ -86,10 +86,7 @@ int main(int argc, char **argv)
 
         }
         else if(ori == 7){
-            vel.linear.x = 0;
-            vel.linear.y = 0;
-            vel.angular.z = 0;
-            pub.publish(vel);
+            
         }
         else if(ori == 8){
 
