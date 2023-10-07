@@ -17,7 +17,7 @@
 #include "std_msgs/Int32MultiArray.h"
 #include "geometry_msgs/Twist.h"
 
-#include "cam.h"
+#include "cammera.h"
 #include "odom.h"
 // #define buildNodeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/buildNode.yaml"
 // #define initBuildEdgeFilePath "/home/ditrobotics/tdk_ws/src/main_func/params/initBuildEdge.yaml"

@@ -1,5 +1,5 @@
 #include "map.h"
-#include "cam.h"
+#include "cammera.h"
 #include "odom.h"
 #include "reset.h"
 using namespace std;
@@ -86,12 +86,16 @@ ros::Publisher cmd_vel_pub;
 ros::Publisher cam_pub;
 ros::Publisher node_detect_pub;
 ros::Publisher laji_pub;
+ros::Publisher cmd_angle_pub;
+
 //subscriber
 ros::Subscriber node_sub;
 ros::Subscriber number_sub;
 ros::Subscriber odom_sub;
 ros::Subscriber stickOnLine_sub;
 ros::Subscriber reset_sub;
+ros::Subscriber laji_ok_sub;
+ros::Subscriber _sub;
 //msgs
 std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
