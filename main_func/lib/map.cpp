@@ -75,6 +75,8 @@ int MAP::startPointInit(int now,int togo){
         ODOM::faceTo = 3;
     }
 
+    ODOM::odometry.theta = PI/2*ODOM::faceTo;
+
     return MAP::cmd_ori(now, togo);
 }
 void MAP::eraseEdge(int u, int v){

@@ -57,6 +57,7 @@ Action individual_action = Action::waiting;
 string robot_state = "waiting";
 
 //global vars
+bool odom_mode = 1;
 int start_now = -1, start_togo = 0;
 bool isNodeLast = false;
 bool onNode = false;
@@ -148,11 +149,25 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     cout<<endl; ROS_ERROR("Reset::all_run"); cout<<endl;
 
-                    ODOM::oriNow = orientation.data = MAP::startPointInit(-1, 0);
+                    ODOM::oriNow = orientation.data = MAP::startPointInit(start_now, start_togo);
                     MAP::initBuildEdge();
-                    capt_ed_times = 0;
-                    ori6State = 0;
-                    rotate_ed = 0;
+
+                    for(int i = 0; i <= 2; i++){
+                        if(ODOM::odometry.x < CAM::capt_x[i]){
+                            capt_ed_times = i;
+                            break;
+                        }
+                        else    capt_ed_times = i + 1;
+                    }
+
+                    if(start_now <= 3)  ori6State = 0;
+                    else ori6State = 10000;
+
+                    if(start_now < 12)  rotate_ed = 0;
+                    else rotate_ed = 1;
+
+                    ROS_ERROR("capt_ed_times: %d, ori6State: %d, rotate_ed:%d",capt_ed_times,ori6State,rotate_ed);
+                    
                     onNode = false;
                 }
 
@@ -395,12 +410,12 @@ int main(int argc, char **argv){
                     individual_action = Action::odom_move;
 
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-                    if(odometry.x < 710)    cmd_vel.linear.y = -2;
+                    if(odometry.x < 715)    cmd_vel.linear.y = -5;
                     else    cmd_vel.linear.y = 0;
                     if(odometry.y < 370)    cmd_vel.linear.x = 15;
                     else    cmd_vel.linear.x = 0;
 
-                    if(!(odometry.x < 710 || odometry.y < 370)){
+                    if(!(odometry.x < 715 || odometry.y < 370)){
                         ROS_WARN("---------------------------------");
                         ROS_ERROR("Done::_first = true!!");
                         Done::_first = true;
@@ -418,6 +433,7 @@ int main(int argc, char **argv){
                     individual_action = Action::odom_move;
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
                     cmd_vel.linear.x = 15;
+                    cmd_vel.linear.y = 0;
                 }else{
                     if(robot_state != "tutorial_move"){
                         ROS_WARN("---------------------------------");
@@ -471,13 +487,33 @@ int main(int argc, char **argv){
 
                     ODOM::oriNow = orientation.data = MAP::startPointInit(13, 14);
                     MAP::eraseEdge(13, 16);
+
+                    robot_state = "tutorial_move";
+                    individual_action = Action::tutorial_move;
                 }
 
-                robot_state = "tutorial_move";
-                individual_action = Action::tutorial_move;
-
+                //節點13,14旋轉
+                if(MAP::nodeNow == 13 && ODOM::faceTo == 1 || MAP::nodeNow == 14){
+                    if(robot_state != "rotate"){
+                        thetaToGo = degrees[(ODOM::faceTo + 1) % 4];
+                        ROS_WARN("---------------------------------");
+                        ROS_WARN("SCRIPT::rotateCCW, faceTo: %f -> %f",degrees[ODOM::faceTo],thetaToGo);
+                    }
+                    robot_state = "rotate";
+                    individual_action = Action::rotate;
+                        
+                    if(!amoungDeg(ODOM::odometry.theta,thetaToGo)){
+                        ODOM::faceTo ++;
+                        ROS_ERROR("ODOM::faceTo: %d",ODOM::faceTo);
+                        ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                        orientation_pub.publish(orientation);
+                        robot_state = "tutorial_move";
+                        individual_action = Action::tutorial_move;
+                    }
+                }
+                
                 //開到14
-                if(MAP::nodeNow == 14){
+                if(MAP::nodeNow == 14 && ODOM::faceTo == 3){
                     ROS_WARN("---------------------------------");
                     ROS_ERROR("Done::_sec_move_2 = true!!");
                     robot_state = "waiting";
@@ -694,8 +730,9 @@ void runInit(ros::NodeHandle& nh){
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
     number_sub = nh.subscribe("/numbers",1,numberCallback);
 
-    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
-    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);
+    nh.getParam("/odom_mode",odom_mode);
+    if(odom_mode)   odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
+    else    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
 
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
