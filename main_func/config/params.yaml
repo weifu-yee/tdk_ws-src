@@ -1,6 +1,8 @@
+odom_mode: 1
 freq: 20
-start_now: -1
-start_togo: 0
+
+start_now: 12
+start_togo: 13
 
 oriParam: 0
 tolerence: 30
@@ -8,7 +10,7 @@ decelerationZone: 30
 nodeLoseConpDELAY: 15
 after_6_shift: 40
 # time_6: 30
-time_7: 15
+time_7: 30
 
 
 # after_6_shift: 100

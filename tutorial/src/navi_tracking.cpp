@@ -289,7 +289,7 @@ int main(int argc, char** argv) {
 
             if(ori10){                
                 // if(PID_mode)    stick.data = 1;
-                if(stick_num >= 5)    stick.data = 1;
+                if(stick_num >= 3)    stick.data = 1;
                 else    stick.data = 0;
                 pub_stickOnLine.publish(stick);
             }
