@@ -1,3 +1,24 @@
+odom_mode: 1
+freq: 20
+
+start_now: -1
+start_togo: 0
+
+oriParam: 0
+tolerence: 30
+decelerationZone: 30
+nodeLoseConpDELAY: 15
+X_after_over_hurdles: 300
+after_6_shift: 40
+# time_6: 30
+time_7: 30
+
+
+# after_6_shift: 100
+time_6: 3
+# time_7: 2
+
+
 # constant
 span: 0.1
 phy_maxMS: 30
@@ -22,17 +43,16 @@ ori: -1
 V: 30
 # V: 100
 vel_limit: 20
+w_limit: 10000
 
 # transmission fix
 
-vkp: 9
-# vkp: 5.0
+vkp: 5
 vki: 0.0
 vkd: 0.0
 
 # rotation fix
 
-wkp: 1.5
-# wkp: 0.9
-wki: 0.0
+wkp: 1.6
+wki: 0.005
 wkd: 0.0

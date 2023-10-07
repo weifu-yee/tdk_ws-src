@@ -57,7 +57,8 @@ Action individual_action = Action::waiting;
 string robot_state = "waiting";
 
 //global vars
-bool odom_mode = 1;
+int odom_mode = 1;
+int odom_mode_last = 1;
 int start_now = -1, start_togo = 0;
 bool isNodeLast = false;
 bool onNode = false;
@@ -65,8 +66,8 @@ double xNow, xLast = -1;
 bool nodeLoseConp = 0;
 int capt_ed_times = 0;
 bool rotate_ed = 0;
+double X_after_over_hurdles = 300;
 int time_6 = 30, time_7 = 15;
-// double after_6_shift = 40;
 double after_6_shift = 40;
 bool stick = 0;
 bool secRESET = 0;
@@ -110,6 +111,26 @@ void stickCallback(const std_msgs::Bool::ConstPtr& sitck_);
 void reset_callback(const std_msgs::Int64::ConstPtr& reset_data);
 
 bool amoungDeg(double a, double b);
+void GetParam(ros::NodeHandle& nh){
+    nh.getParam("/odom_mode",odom_mode);
+    nh.getParam("/freq",freq);
+    nh.getParam("/tolerence",tolerence);
+    nh.getParam("/decelerationZone",decelerationZone);
+    nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);
+    nh.getParam("/start_now",start_now);
+    nh.getParam("/start_togo",start_togo);
+    nh.getParam("/time_6",time_6);
+    nh.getParam("/time_7",time_7);
+    nh.getParam("/after_6_shift",after_6_shift);
+    nh.getParam("/X_after_over_hurdles",X_after_over_hurdles);
+    if(!odom_mode){
+        ROS_ERROR("^^^^^^^^^^^^^^^^^^fake_odom !!!^^^^^^^^^^^^^^^^^^");
+        odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
+    }else{
+        ROS_ERROR("^^^^^^^^^^^^^^^^^^realspeed !!!^^^^^^^^^^^^^^^^^^");
+        odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
+    }
+}
 
 //main
 int main(int argc, char **argv){
@@ -120,11 +141,13 @@ int main(int argc, char **argv){
     MAP::initBuildEdge();
 
     runInit(nh);
+    GetParam(nh);
 
     ros::Rate rate(freq);
     
     
     while(nh.ok()){
+
         //重置狀態
         switch(reset_state){
             case Reset::wait:{
@@ -161,7 +184,7 @@ int main(int argc, char **argv){
                     }
 
                     if(start_now <= 3)  ori6State = 0;
-                    else ori6State = 10000;
+                    else ori6State = 1;
 
                     if(start_now < 12)  rotate_ed = 0;
                     else rotate_ed = 1;
@@ -309,7 +332,7 @@ int main(int argc, char **argv){
                     cam_mode_1 ++;
                 }
                 //跨坎
-                if(ori6State < (int)time_6*freq && odometry.x >= 140 + 20 && 
+                if(!ori6State&& odometry.x >= 140 + 20 && 
                     (MAP::nodeNow >= 1 && MAP::nodeNow <= 3) && 
                     (MAP::nodeToGo >= 4 && MAP::nodeToGo <= 6)){   
                     robot_state = "over_hurdles";
@@ -363,14 +386,14 @@ int main(int argc, char **argv){
                     }
                 }
                 else if(robot_state == "over_hurdles"){     //跨坎
-                    individual_action = Action::over_hurdles;
-                    if(!ori6State){
+                    if(individual_action != Action::over_hurdles){
                         ROS_WARN("---------------------------------");
                         ROS_WARN("over_hurdles");
                     }
-                    ODOM::odometry.x = 270;
+                    individual_action = Action::over_hurdles;
+                    ODOM::odometry.x = X_after_over_hurdles;
                     //跨坎補償
-                    if(++ori6State == time_6*freq){
+                    if(ori6State){
                         robot_state = "calibration";
                         stick = 0;
                         stick_times = 0;
@@ -387,7 +410,7 @@ int main(int argc, char **argv){
                         else    ROS_WARN("stick on the line!!");
                         ODOM::oriNow = orientation.data = 0;
                         orientation_pub.publish(orientation);
-                        ODOM::odometry.x = 270;
+                        ODOM::odometry.x = X_after_over_hurdles;
                         ODOM::odometry.y = MAP::node[MAP::nodeNow].second.second;
                         robot_state = "tutorial_move";
                         individual_action = Action::tutorial_move;
@@ -457,19 +480,18 @@ int main(int argc, char **argv){
                     cout<<endl; ROS_WARN("____________Level::binBaiYa____________"); cout<<endl;
                 }
 
+                if(ori7State && robot_state == "script_binBaiYa"){
+                    ROS_WARN("script_binBaiYa --- complete!!");
+                    ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
+                    orientation_pub.publish(orientation);
+                }
+
                 robot_state = "tutorial_move";
                 individual_action = Action::tutorial_move;
 
-                if(MAP::nodeNow == 16 && ori7State < (int)time_7*freq){
+                if(MAP::nodeNow == 16 && !ori7State){
                     robot_state = "script_binBaiYa";
                     individual_action = Action::script_binBaiYa;
-                    if(++ori7State == time_7*freq){
-                        ROS_WARN("script_binBaiYa --- complete!!");
-                        ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
-                        orientation_pub.publish(orientation);
-                        robot_state = "tutorial_move";
-                        individual_action = Action::tutorial_move;
-                    }
                 }
 
                 if(MAP::nodeNow == 13 && MAP::nodeToGo == 14){
@@ -666,7 +688,6 @@ int main(int argc, char **argv){
                 break;
             }
             case Action::over_hurdles:{
-                ROS_WARN_THROTTLE(1," \"6\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori6State/20 + 1, time_6);
                 ODOM::oriNow = orientation.data = 6;
                 orientation_pub.publish(orientation);
                 break;
@@ -693,7 +714,6 @@ int main(int argc, char **argv){
                 break;
             }
             case Action::script_binBaiYa:{
-                ROS_WARN_THROTTLE(1," \"7\" /cmd_ori: %d, %d / %d (sec)",orientation.data ,ori7State/20 + 1, time_7);
                 ODOM::oriNow = orientation.data = 7;
                 orientation_pub.publish(orientation);
                 break;
@@ -729,10 +749,8 @@ void runInit(ros::NodeHandle& nh){
     node_sub = nh.subscribe("/node_detect",1,nodeCallback);
     cam_pub = nh.advertise<std_msgs::Int32>("/mode", 1);
     number_sub = nh.subscribe("/numbers",1,numberCallback);
-
-    nh.getParam("/odom_mode",odom_mode);
-    if(odom_mode)   odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
-    else    odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
+    // odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
+    // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
 
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
@@ -740,16 +758,6 @@ void runInit(ros::NodeHandle& nh){
     reset_sub = nh.subscribe("/reset",1,reset_callback);
 
     ONE.data = 1;
-
-    nh.getParam("/freq",freq);
-    nh.getParam("/tolerence",tolerence);
-    nh.getParam("/decelerationZone",decelerationZone);
-    nh.getParam("/nodeLoseConpDELAY",nodeLoseConpDELAY);
-    nh.getParam("/start_now",start_now);
-    nh.getParam("/start_togo",start_togo);
-    nh.getParam("/time_6",time_6);
-    nh.getParam("/time_7",time_7);
-    nh.getParam("/after_6_shift",after_6_shift);
 }
 
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
@@ -772,6 +780,8 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     if(reset_state == Reset::wait)   return;
     if(robot_state == "waiting")    return;
     odometry.update(ins_vel);
+    if(ins_vel->linear.z == 1)  ori6State = 1;
+    if(ins_vel->linear.z == 2)  ori7State = 1;
     ROS_INFO_THROTTLE(0.25, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
