@@ -26,7 +26,7 @@ std_msgs::Bool stick;
 bool PID_mode, EX_mode;
 bool _PID_mode;
 int stick_num;
-double V = 0, vel_limit = 0;
+double V = 0, vel_limit = 0, w_limit = 0;
 double u_d = 0, u_theta = 0, u = 0;
 geometry_msgs::Twist vel;
 //tracker arguments --from Arduino
@@ -132,18 +132,18 @@ void error_cal(){
         Err_d = (Err_F + Err_B) / 2;
         Err_theta = atan((Err_F - Err_B) / 7);
 }
-double PID_control(double error, double kp, double ki, double kd){
+double PID_control(double error, double kp, double ki, double kd, double limit){
     double u,differential;
     static double prev_error = 0, integral = 0;
     integral += error;
-    if (ki * integral > 1) integral = 1/ki;
-    else if (ki * integral < -1) integral = -1/ki;
+    if (ki * integral > 0.03) integral = 0.03;
+    else if (ki * integral < -0.03) integral = -0.03;
     differential = error - prev_error;
     prev_error = error;
 
     u = kp * error + ki * integral + kd * differential;
-    if (u > vel_limit) {u = vel_limit;}
-    else if (u < -vel_limit) {u = -vel_limit;}
+    if (u > limit) {u = limit;}
+    else if (u < -limit) {u = -limit;}
 
     return u;
 }
@@ -217,6 +217,7 @@ int main(int argc, char** argv) {
 
         nh.getParam("/V",V);
         nh.getParam("/vel_limit",vel_limit);
+        nh.getParam("/w_limit",w_limit);
 
         if(ori >= 0 && ori < 4 || ori == -2 || ori == 10 || ori == -1){
             if(ori == -2){
@@ -248,8 +249,8 @@ int main(int argc, char** argv) {
             }
 
             error_cal();
-            u_d = -PID_control(Err_d,vkp,vki,vkd);
-            u_theta = -PID_control(Err_theta,wkp,wki,wkd);
+            u_d = -PID_control(Err_d,vkp,vki,vkd,vel_limit);
+            u_theta = -PID_control(Err_theta,wkp,wki,wkd,w_limit);
 
             // ROS_INFO("Err_d: %.1lf,Err_theta: %.5lf,u_d: %.1lf,u_theta: %.1lf",Err_d,Err_theta,u_d,u_theta);
 

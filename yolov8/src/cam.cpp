@@ -53,13 +53,11 @@ bool detect(){
     // call detect.py
     detect_msg.data = true;
     ros::Rate rate(20);
-    for(int i = 1; i <= 50; i++){
+    for(int i = 1; i <= 200; i++){
         detect_pub.publish(detect_msg);
         ros::spinOnce();
         rate.sleep();
     }
-    
-    // ROS_INFO("[3] Detect Finish.");
     return success;
 }
 
