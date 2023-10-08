@@ -1,5 +1,2 @@
 CMakeList.txt
 .vscode/
-
-yolov8/CMakeLists.txt
-main_func/include/main_func/yaml_path.h
