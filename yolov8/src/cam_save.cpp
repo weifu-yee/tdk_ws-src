@@ -13,8 +13,8 @@ using namespace cv;
 
 ros::Subscriber cam_sub;
 ros::Publisher detect_pub;
-VideoCapture cap;
 std_msgs::Bool detect_msg;
+VideoCapture cap;
 
 bool flag1=true, flag2=true, flag3=true;
 
@@ -41,8 +41,10 @@ bool closeCam(){
 }
 
 bool detect(){
+    cap.open(0, CAP_V4L2);
     Mat frame;
     cap >> frame; 
+    cap.release();
 
 /* ADDITIONAL SAVE*/
     // Get the current time
@@ -62,7 +64,6 @@ bool detect(){
     bool success_save = cv::imwrite(img_path_save, frame);  // Save the image
     if (success_save) ROS_INFO("[3] Image_save captured and saved.");
     else ROS_ERROR("[3] Failed to save the image_save. Retrying...");
-    
 /* ADDITIONAL SAVE*/
 
 /* ORIGINAL SAVE*/
@@ -71,19 +72,27 @@ bool detect(){
     img_path_stream << "/home/ditrobotics/tdk_ws/src/yolov8/jpg/capture.jpg";
     std::string img_path = img_path_stream.str();
 
-    bool success = cv::imwrite(img_path, frame);  // Save the image
+    ros::Duration(0.2).sleep();
 
+    bool success = cv::imwrite(img_path, frame);  // Save the image
     if (success) ROS_INFO("[3] Image captured and saved.");
     else ROS_ERROR("[3] Failed to save the image. Retrying...");
+    
+    ros::Duration(0.5).sleep();
     
     // call detect.py
     detect_msg.data = true;
     ros::Rate rate(20);
     for(int i = 1; i <= 20; i++){
         detect_pub.publish(detect_msg);
+        ros::spinOnce();
         rate.sleep();
     }
-  
+
+    detect_msg.data = false;
+    detect_pub.publish(detect_msg);
+
+    frame.release();
     return success;
 }
 /* ORIGINAL SAVE*/

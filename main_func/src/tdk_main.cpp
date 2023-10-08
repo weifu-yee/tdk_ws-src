@@ -5,7 +5,7 @@
 #include "shooter.h"
 using namespace std;
 
-#define att 20
+#define att 40
 
 enum Reset{
     wait,
@@ -66,7 +66,7 @@ string robot_state = "waiting";
 int odom_mode = 1;
 int start_now = 31, start_togo = 0;
 int sec_start_now = 32, sec_start_togo = 13;
-double after_6_shift = 40;
+double after_6_shift = 20;
 double X_after_over_hurdles = 300;
 double Y_shifting_after_binBaiYa = 110;
 double Y_shifting_dustBox = 0;
@@ -148,7 +148,7 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
     if(ins_vel->linear.z == 1)  ori6State = 1;
     if(ins_vel->linear.z == 2)  ori7State = 1;
-    ROS_INFO_THROTTLE(0.25, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
+    ROS_INFO_THROTTLE(5, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
@@ -246,22 +246,32 @@ void variable_reset(void){
     Done::_baseball = 0;
     Done::_badminton = 0;
     Done::_sec_move_3 = 0;
-    capt_ed_times = 0;
-    ori6State = 0;
-    after_6_shift_state = 0;
-    rotate_ed = 0;
-    ori7State = 0;
-    laji_process_state = 0;
     cmd_vel.linear.x = 0;
     cmd_vel.linear.y = 0;
     cmd_vel.angular.z = 0;
     sideAction::DUSTBOX = false;
     sideAction::SHOOTER = false;
+
+    onNode = false;
+    capt_ed_times = 0;
+    rotate_ed = 0;
+    cam_mode_1 = 0;
+    ori6State = 0;
+    ori7State = 0;
+    after_6_shift_state = 0;
+    stick_times = 0;
+    laji_process_state = 0;
+    laji_ok_state = 0;
     lajiOKLast = 1;
     pitches_state = -1;
     shooter_state = -1;
     stOKLast = 0;
     shooter_ok = false;
+    isNodeLast = false;
+    stick = 0;
+
+    cam_mode.data = 4;
+    cam_pub.publish(cam_mode);
 }
 void reset__sec_init(){
     ODOM::oriNow = orientation.data = MAP::startPointInit(sec_start_now, sec_start_togo);
@@ -474,6 +484,7 @@ int main(int argc, char **argv){
                 //三次辨識
                 for(int i = 0; i <= 2; i++){
                     if(capt_ed_times == i && odometry.x >= CAM::capt_x[i]){
+                        CAM::numbers.clear();       
                         camNum_op = 3*i + 1;
                         ROS_ERROR("cease ... to capture & detect!!!");
                         cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
@@ -883,15 +894,15 @@ int main(int argc, char **argv){
             case Action::calibration:{
                 ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
                 if(after_6_shift_state == 0){
-                    if(ODOM::odometry.y > MAP::node_y(MAP::nodeNow) - after_6_shift){
-                        cmd_vel.linear.y = -15;
+                    if(ODOM::odometry.y < MAP::node_y(MAP::nodeNow) + after_6_shift){
+                        cmd_vel.linear.y = 15;
                     }else{
                         after_6_shift_state ++;
                         ROS_WARN("switch");
                     }
                 }else if(after_6_shift_state == 1){
-                    if(ODOM::odometry.y < MAP::node[MAP::nodeNow].second.second + after_6_shift){
-                        cmd_vel.linear.y = 15;
+                    if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
+                        cmd_vel.linear.y = -15;
                     }else{
                         after_6_shift_state ++;
                         ROS_WARN("calibration_done");
@@ -938,7 +949,7 @@ int main(int argc, char **argv){
         }
 
 
-        ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
+        ROS_WARN_THROTTLE(5, "robot_state: %s",robot_state.c_str());
         ros::spinOnce();
         rate.sleep();
     }

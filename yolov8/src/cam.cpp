@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
-#define ATTEMPT 5
+#define ATTEMPT 1
 
 ros::Subscriber cam_sub;
 ros::Publisher detect_pub;
@@ -50,16 +50,25 @@ bool detect(){
     if (success) ROS_INFO("[3] Image captured and saved.");
     else ROS_ERROR("[3] Failed to save the image. Retrying...");
     
+    ros::Duration(0.5).sleep();
+    
     // call detect.py
     detect_msg.data = true;
     ros::Rate rate(20);
-    for(int i = 1; i <= 200; i++){
+    for(int i = 1; i <= 20; i++){
         detect_pub.publish(detect_msg);
         ros::spinOnce();
         rate.sleep();
     }
+
+    detect_msg.data = false;
+    detect_pub.publish(detect_msg);
+
+    frame.release();
     return success;
 }
+
+
 
 void modeCallback(const std_msgs::Int32::ConstPtr& msg)
 {
@@ -91,6 +100,5 @@ int main(int argc, char **argv)
     cam_sub = nh.subscribe("/mode", 10, modeCallback);
     detect_pub = nh.advertise<std_msgs::Bool>("/detect", 10);
     ros::spin();
-
     return 0;
 }
