@@ -64,13 +64,16 @@ int MAP::startPointInit(int now,int togo){
     MAP::nodeToGo = togo;
     ODOM::odometry.x = MAP::node_x(now);
     ODOM::odometry.y = MAP::node_y(now);
-    MAP::eraseEdge(now, togo);
+    
+    if(now == 13 && togo == 16);
+    else if(now == 14 && togo == 17);
+    else    MAP::eraseEdge(now, togo);
     
     ODOM::faceTo = 0;
     if(togo >= 13 && togo <= 30){
         ODOM::faceTo = 1;
     }
-    if(now > 14 && now <= 30){
+    if(now >= 14 && now <= 30){
         ODOM::faceTo = 3;
     }
 

@@ -53,6 +53,7 @@ namespace sideAction{
     bool SHOOTER = 0;
     bool DUSTBOX = 0;
 }
+
 Reset reset_state = Reset::wait;
 Reset last_reset_state = Reset::wait;
 Level level_ing = Level::the_wait;
@@ -84,9 +85,11 @@ int after_6_shift_state = 0;
 int stick_times = 0;
 int laji_process_state = 0;
 int laji_ok_state = 0;
-bool lajiOKLast = false;
+int lajiOKLast = 1;
 int pitches_state = -1;
 int shooter_state = -1;
+int stOKLast = 0;
+bool shooter_ok = false;
 
 //variables_last
 bool isNodeLast = false;
@@ -112,6 +115,7 @@ ros::Subscriber stickOnLine_sub;
 ros::Subscriber reset_sub;
 ros::Subscriber laji_ok_sub;
 ros::Subscriber pitches_sub;
+ros::Subscriber st_ok_sub;
 //pub msgs
 std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
@@ -164,15 +168,23 @@ void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
     }
 }
 void laji_ok_callback(const std_msgs::Int8::ConstPtr& laji_ok_data){
-    bool lajiOK = laji_ok_data->data;
-    if(lajiOK != lajiOKLast && lajiOK){
-        laji_ok_state = true;
+    int lajiOK = laji_ok_data->data;
+    if(lajiOK != lajiOKLast && lajiOK == 1){
+        laji_ok_state = 1;
         ROS_WARN("lajiOK!");
     }
     lajiOKLast = lajiOK;        
 }
 void pitches_callback(const std_msgs::Int8::ConstPtr& pitches_data){
     pitches_state = pitches_data->data;
+}
+void st_ok_callback(const std_msgs::Int8::ConstPtr& st_ok_data){
+    int stOK = st_ok_data->data;
+    if(stOK != stOKLast && stOK == 1){
+        shooter_ok = true;
+        ROS_WARN("shooter_ok!");
+    }
+    stOKLast = stOK;
 }
 
 bool amoungDeg(double a, double b){
@@ -220,6 +232,7 @@ void pubSubInit(ros::NodeHandle& nh){
     reset_sub = nh.subscribe("/reset",1,reset_callback);
     laji_ok_sub = nh.subscribe("/laji_ok",1,laji_ok_callback);
     pitches_sub = nh.subscribe("/pitches",1,pitches_callback);
+    st_ok_sub = nh.subscribe("/st_ok",1,st_ok_callback);
 }
 void variable_reset(void){
     level_ing = Level::the_wait;
@@ -241,13 +254,19 @@ void variable_reset(void){
     cmd_vel.angular.z = 0;
     sideAction::DUSTBOX = false;
     sideAction::SHOOTER = false;
-    lajiOKLast = false;
+    lajiOKLast = 1;
     pitches_state = -1;
     shooter_state = -1;
+    stOKLast = 0;
+    shooter_ok = false;
 }
 void reset__sec_init(){
     ODOM::oriNow = orientation.data = MAP::startPointInit(sec_start_now, sec_start_togo);
     onNode = false;
+    if(sec_start_now == 14 && sec_start_togo == 17){
+        Done::_sec_move_1 = true;
+        Done::_sec_move_2 = true;
+    }
 }
 
 //debug print functons
@@ -912,9 +931,13 @@ int main(int argc, char **argv){
                 ROS_ERROR("shooter switch on !!!");
                 shooter_state = 0;
             }
-            //
+            //等待填裝完成
             if(shooter_state == 0){
-                
+                if(shooter_ok){
+                    shooter_compute_angle();
+                    shooter_state = 1;
+                    shooter_ok = false;
+                }
             }
         }
 
