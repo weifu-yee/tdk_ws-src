@@ -168,9 +168,9 @@ void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
     }
 }
 void laji_ok_callback(const std_msgs::Int8::ConstPtr& laji_ok_data){
-    int lajiOK = laji_ok_data->data;
-    if(lajiOK != lajiOKLast && lajiOK == 1){
-        laji_ok_state = 1;
+    bool lajiOK = laji_ok_data->data;
+    if(lajiOK != lajiOKLast && lajiOK){
+        laji_ok_state = true;
         ROS_WARN("lajiOK!");
     }
     lajiOKLast = lajiOK;        
