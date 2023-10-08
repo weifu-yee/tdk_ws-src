@@ -35,9 +35,12 @@ namespace MAP{
     extern int nodeNow, nodeToGo;
     extern vector<pair<int, pair<double, double>>> node;    //<index, x, y>
     extern vector<set<int>> adj_list;     //adjacency_list
+    extern stack<int>   des_baseball;
 
     void buildNode();
     void initBuildEdge();
+    void initDesBaseball();
+
     double node_x(int u);
     double node_y(int u);
     int startPointInit(int now,int togo);

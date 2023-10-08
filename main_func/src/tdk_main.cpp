@@ -265,6 +265,14 @@ void Done_print(string s){
     ROS_ERROR("*   *   *   *   *   *   *");
 }
 
+//shooter
+int shooter_compute_angle(){
+    if(MAP::des_baseball.empty())   return 0;
+    int des = MAP::des_baseball.top();
+    MAP::des_baseball.pop();
+    return 1;
+}
+
 //main
 int main(int argc, char **argv){
     ros::init(argc, argv, "tdk_main");
@@ -906,7 +914,7 @@ int main(int argc, char **argv){
             }
             //
             if(shooter_state == 0){
-
+                
             }
         }
 

@@ -6,8 +6,10 @@ double decelerationZone = 16;
 double nodeLoseConpDELAY = 2;
 int MAP::nodeNow = 31;
 int MAP::nodeToGo = 0;
+
 vector<pair<int, pair<double, double>>> MAP::node;     //<index, x, y>
 vector<set<int>> MAP::adj_list(num_of_nodes);       //adjacency_list
+stack<int>   MAP::des_baseball;
 
 void MAP::buildNode(){
     std::ifstream file(buildNodeFilePath);
@@ -42,6 +44,13 @@ void MAP::initBuildEdge(){
         int v = edge[1].as<int>();
         buildEdge(u,v);
     }
+}
+void MAP::initDesBaseball(){
+    while(!MAP::des_baseball.empty())   MAP::des_baseball.pop();
+    MAP::des_baseball.push(25);
+    MAP::des_baseball.push(26);
+    MAP::des_baseball.push(27);
+    MAP::des_baseball.push(28);
 }
 
 double MAP::node_x(int u){
