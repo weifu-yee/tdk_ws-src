@@ -8,6 +8,8 @@ freq: 20
 
 start_now: 31
 start_togo: 0
+sec_start_now: 32
+sec_start_togo: 13
 
 oriParam: 0
 tolerence: 30
