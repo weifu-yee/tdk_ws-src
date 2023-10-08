@@ -7,6 +7,7 @@
 #include <yaml-cpp/yaml.h>
 #include <utility>
 #include <set>
+#include <stack>
 #include <cmath>
 #include <stdbool.h>
 #include "ros/ros.h"
