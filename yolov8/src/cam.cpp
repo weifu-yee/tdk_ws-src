@@ -54,7 +54,7 @@ bool detect(){
     detect_msg.data = true;
     ros::Rate rate(20);
     for(int i = 1; i <= 60; i++){
-        detect_pub.publish(detect_msg);
+        if(i>40) detect_pub.publish(detect_msg);
         ros::spinOnce();
         rate.sleep();
     }
