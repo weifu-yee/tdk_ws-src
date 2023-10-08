@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
-#define ATTEMPT 50
+#define ATTEMPT 1
 
 ros::Subscriber cam_sub;
 ros::Publisher detect_pub;
@@ -45,23 +45,7 @@ bool detect(){
     std::string img_path = img_path_stream.str();
 
     Mat frame;
-    int retry_count = 0;  // To avoid infinite loop, set a maximum number of retries
-    const int max_retries = 10;  // For example, retry 10 times
-
-    do {
-        cap >> frame;
-        if (frame.empty()) {
-            ROS_WARN("[3] Captured frame is empty. Retrying...");
-            retry_count++;
-            ros::Duration(0.2).sleep();  // Sleep for 200ms before retrying
-        }
-    } while (frame.empty() && retry_count < max_retries);
-
-    if (retry_count == max_retries) {
-        ROS_ERROR("[3] Failed to capture a frame after multiple retries.");
-        return false;
-    }
-
+    cap >> frame; 
     bool success = cv::imwrite(img_path, frame);  // Save the image
     if (success) ROS_INFO("[3] Image captured and saved.");
     else ROS_ERROR("[3] Failed to save the image. Retrying...");
@@ -79,8 +63,12 @@ bool detect(){
 
     detect_msg.data = false;
     detect_pub.publish(detect_msg);
+
+    frame.release();
     return success;
 }
+
+
 
 void modeCallback(const std_msgs::Int32::ConstPtr& msg)
 {

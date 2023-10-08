@@ -47,9 +47,9 @@ def detect_img():
     rospy.loginfo("[3] Published detected class: %s", msg.data)
     
     # Delete the jpg
-    if os.path.exists(img_path):
-        os.remove(img_path)
-        rospy.loginfo(f"[detect.py] {img_path} has been deleted.")
+    # if os.path.exists(img_path):
+    #     os.remove(img_path)
+    #     rospy.loginfo(f"[detect.py] {img_path} has been deleted.")
     
 
 def main():

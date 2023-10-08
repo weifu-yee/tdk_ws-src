@@ -65,7 +65,7 @@ string robot_state = "waiting";
 int odom_mode = 1;
 int start_now = 31, start_togo = 0;
 int sec_start_now = 32, sec_start_togo = 13;
-double after_6_shift = 40;
+double after_6_shift = 20;
 double X_after_over_hurdles = 300;
 double Y_shifting_after_binBaiYa = 110;
 double Y_shifting_dustBox = 0;
@@ -900,15 +900,15 @@ int main(int argc, char **argv){
             case Action::calibration:{
                 ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
                 if(after_6_shift_state == 0){
-                    if(ODOM::odometry.y > MAP::node_y(MAP::nodeNow) - after_6_shift){
-                        cmd_vel.linear.y = -15;
+                    if(ODOM::odometry.y < MAP::node_y(MAP::nodeNow) + after_6_shift){
+                        cmd_vel.linear.y = 15;
                     }else{
                         after_6_shift_state ++;
                         ROS_WARN("switch");
                     }
                 }else if(after_6_shift_state == 1){
-                    if(ODOM::odometry.y < MAP::node[MAP::nodeNow].second.second + after_6_shift){
-                        cmd_vel.linear.y = 15;
+                    if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
+                        cmd_vel.linear.y = -15;
                     }else{
                         after_6_shift_state ++;
                         ROS_WARN("calibration_done");
