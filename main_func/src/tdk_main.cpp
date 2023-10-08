@@ -4,7 +4,7 @@
 #include "reset.h"
 using namespace std;
 
-#define att 20
+#define att 40
 
 enum Reset{
     wait,
@@ -138,7 +138,7 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
     for(auto i:the_numbers->data){
         CAM::numbers.insert(i);
     }
-    _pub4 = 0;
+    _pub4 = -1;
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     if(CAM::cease)  return;
@@ -147,7 +147,7 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
     if(ins_vel->linear.z == 1)  ori6State = 1;
     if(ins_vel->linear.z == 2)  ori7State = 1;
-    ROS_INFO_THROTTLE(0.25, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
+    ROS_INFO_THROTTLE(5, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
@@ -236,6 +236,8 @@ void pubSubInit(ros::NodeHandle& nh){
 }
 void variable_reset(void){
     level_ing = Level::the_wait;
+
+    CAM::numbers.clear();
     Done::_first = 0;
     Done::_sec_move_1 = 0;
     Done::_binBaiYa = 0;
@@ -243,22 +245,33 @@ void variable_reset(void){
     Done::_baseball = 0;
     Done::_badminton = 0;
     Done::_sec_move_3 = 0;
-    capt_ed_times = 0;
-    ori6State = 0;
-    after_6_shift_state = 0;
-    rotate_ed = 0;
-    ori7State = 0;
-    laji_process_state = 0;
     cmd_vel.linear.x = 0;
     cmd_vel.linear.y = 0;
     cmd_vel.angular.z = 0;
     sideAction::DUSTBOX = false;
     sideAction::SHOOTER = false;
+
+    midway_reset_pub_0_times = 0;
+    onNode = false;
+    capt_ed_times = 0;
+    rotate_ed = 0;
+    cam_mode_1 = 0;
+    ori6State = 0;
+    ori7State = 0;
+    after_6_shift_state = 0;
+    stick_times = 0;
+    laji_process_state = 0;
+    laji_ok_state = 0;
     lajiOKLast = 1;
     pitches_state = -1;
     shooter_state = -1;
     stOKLast = 0;
     shooter_ok = false;
+    isNodeLast = false;
+    stick = 0;
+
+    cam_mode.data = 4;
+    cam_pub.publish(cam_mode);
 }
 void reset__sec_init(){
     ODOM::oriNow = orientation.data = MAP::startPointInit(sec_start_now, sec_start_togo);
@@ -478,6 +491,7 @@ int main(int argc, char **argv){
                 //三次辨識
                 for(int i = 0; i <= 2; i++){
                     if(capt_ed_times == i && odometry.x >= CAM::capt_x[i]){
+                        CAM::numbers.clear();       
                         camNum_op = 3*i + 1;
                         ROS_ERROR("cease ... to capture & detect!!!");
                         cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
@@ -852,7 +866,7 @@ int main(int argc, char **argv){
                 break;
             }
             case Action::capture_n_detect:{
-                if(_pub4 > att)   cam_mode.data = 4;
+                if(_pub4 > att || _pub4 < 0)   cam_mode.data = 4;
                 else    cam_mode.data = 3;
                 cam_pub.publish(cam_mode);
 
@@ -942,7 +956,7 @@ int main(int argc, char **argv){
         }
 
 
-        ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
+        ROS_WARN_THROTTLE(5, "robot_state: %s",robot_state.c_str());
         ros::spinOnce();
         rate.sleep();
     }

@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
-#define ATTEMPT 5
+#define ATTEMPT 50
 
 ros::Subscriber cam_sub;
 ros::Publisher detect_pub;
@@ -53,11 +53,14 @@ bool detect(){
     // call detect.py
     detect_msg.data = true;
     ros::Rate rate(20);
-    for(int i = 1; i <= 200; i++){
+    for(int i = 1; i <= 60; i++){
         detect_pub.publish(detect_msg);
         ros::spinOnce();
         rate.sleep();
     }
+
+    detect_msg.data = false;
+    detect_pub.publish(detect_msg);
     return success;
 }
 
@@ -91,6 +94,5 @@ int main(int argc, char **argv)
     cam_sub = nh.subscribe("/mode", 10, modeCallback);
     detect_pub = nh.advertise<std_msgs::Bool>("/detect", 10);
     ros::spin();
-
     return 0;
 }

@@ -62,7 +62,6 @@ bool detect(){
     bool success_save = cv::imwrite(img_path_save, frame);  // Save the image
     if (success_save) ROS_INFO("[3] Image_save captured and saved.");
     else ROS_ERROR("[3] Failed to save the image_save. Retrying...");
-    
 /* ADDITIONAL SAVE*/
 
 /* ORIGINAL SAVE*/
@@ -83,7 +82,9 @@ bool detect(){
         detect_pub.publish(detect_msg);
         rate.sleep();
     }
-  
+    
+    detect_msg.data = false;
+    detect_pub.publish(detect_msg);
     return success;
 }
 /* ORIGINAL SAVE*/
