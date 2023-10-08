@@ -2,6 +2,7 @@
 #include "cammera.h"
 #include "odom.h"
 #include "reset.h"
+#include "shooter.h"
 using namespace std;
 
 #define att 20
@@ -138,7 +139,7 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
     for(auto i:the_numbers->data){
         CAM::numbers.insert(i);
     }
-    _pub4 = 0;
+    _pub4 = -1;
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     if(CAM::cease)  return;
@@ -236,6 +237,8 @@ void pubSubInit(ros::NodeHandle& nh){
 }
 void variable_reset(void){
     level_ing = Level::the_wait;
+
+    CAM::numbers.clear();
     Done::_first = 0;
     Done::_sec_move_1 = 0;
     Done::_binBaiYa = 0;
@@ -284,13 +287,6 @@ void Done_print(string s){
     ROS_ERROR("*   *   *   *   *   *   *");
 }
 
-//shooter
-int shooter_compute_angle(){
-    if(MAP::des_baseball.empty())   return 0;
-    int des = MAP::des_baseball.top();
-    MAP::des_baseball.pop();
-    return 1;
-}
 
 //main
 int main(int argc, char **argv){
@@ -852,7 +848,7 @@ int main(int argc, char **argv){
                 break;
             }
             case Action::capture_n_detect:{
-                if(_pub4 > att)   cam_mode.data = 4;
+                if(_pub4 > att || _pub4 < 0)   cam_mode.data = 4;
                 else    cam_mode.data = 3;
                 cam_pub.publish(cam_mode);
 
@@ -934,7 +930,7 @@ int main(int argc, char **argv){
             //等待填裝完成
             if(shooter_state == 0){
                 if(shooter_ok){
-                    shooter_compute_angle();
+                    SHOOTER::compute_angle();
                     shooter_state = 1;
                     shooter_ok = false;
                 }

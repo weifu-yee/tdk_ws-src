@@ -156,7 +156,7 @@ include_directories(
 # )
 
 
-add_executable(tdk_main src/tdk_main.cpp lib/map.cpp lib/cammera.cpp lib/odom.cpp lib/reset.cpp)
+add_executable(tdk_main src/tdk_main.cpp lib/map.cpp lib/cammera.cpp lib/odom.cpp lib/reset.cpp lib/shooter.cpp)
 target_link_libraries(tdk_main ${catkin_LIBRARIES} yaml-cpp)
 add_dependencies(tdk_main ${catkin_EXPORTED_TARGETS})
 
