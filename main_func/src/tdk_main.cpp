@@ -84,7 +84,7 @@ int after_6_shift_state = 0;
 int stick_times = 0;
 int laji_process_state = 0;
 int laji_ok_state = 0;
-bool lajiOKLast = false;
+int lajiOKLast = 1;
 int pitches_state = -1;
 int shooter_state = -1;
 
@@ -164,9 +164,9 @@ void reset_callback(const std_msgs::Int64::ConstPtr& reset_data){
     }
 }
 void laji_ok_callback(const std_msgs::Int8::ConstPtr& laji_ok_data){
-    bool lajiOK = laji_ok_data->data;
+    int lajiOK = laji_ok_data->data;
     if(lajiOK != lajiOKLast && lajiOK){
-        laji_ok_state = true;
+        laji_ok_state = 1;
         ROS_WARN("lajiOK!");
     }
     lajiOKLast = lajiOK;        
@@ -241,7 +241,7 @@ void variable_reset(void){
     cmd_vel.angular.z = 0;
     sideAction::DUSTBOX = false;
     sideAction::SHOOTER = false;
-    lajiOKLast = false;
+    lajiOKLast = 1;
     pitches_state = -1;
     shooter_state = -1;
 }
