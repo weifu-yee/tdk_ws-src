@@ -251,7 +251,6 @@ void variable_reset(void){
     sideAction::DUSTBOX = false;
     sideAction::SHOOTER = false;
 
-    midway_reset_pub_0_times = 0;
     onNode = false;
     capt_ed_times = 0;
     rotate_ed = 0;

@@ -1,7 +1,7 @@
 # V: 100
 # phy_maxMS: 200
-V: 30
-phy_maxMS: 30
+V: 46
+phy_maxMS: 46
 
 odom_mode: 1
 freq: 20

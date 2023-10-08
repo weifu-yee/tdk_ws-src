@@ -45,16 +45,34 @@ bool detect(){
     std::string img_path = img_path_stream.str();
 
     Mat frame;
-    cap >> frame; 
+    int retry_count = 0;  // To avoid infinite loop, set a maximum number of retries
+    const int max_retries = 10;  // For example, retry 10 times
+
+    do {
+        cap >> frame;
+        if (frame.empty()) {
+            ROS_WARN("[3] Captured frame is empty. Retrying...");
+            retry_count++;
+            ros::Duration(0.2).sleep();  // Sleep for 200ms before retrying
+        }
+    } while (frame.empty() && retry_count < max_retries);
+
+    if (retry_count == max_retries) {
+        ROS_ERROR("[3] Failed to capture a frame after multiple retries.");
+        return false;
+    }
+
     bool success = cv::imwrite(img_path, frame);  // Save the image
     if (success) ROS_INFO("[3] Image captured and saved.");
     else ROS_ERROR("[3] Failed to save the image. Retrying...");
     
+    ros::Duration(0.5).sleep();
+    
     // call detect.py
     detect_msg.data = true;
     ros::Rate rate(20);
-    for(int i = 1; i <= 60; i++){
-        if(i>40) detect_pub.publish(detect_msg);
+    for(int i = 1; i <= 20; i++){
+        detect_pub.publish(detect_msg);
         ros::spinOnce();
         rate.sleep();
     }
