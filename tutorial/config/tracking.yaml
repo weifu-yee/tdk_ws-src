@@ -21,6 +21,8 @@ Y_shifting_after_binBaiYa: 110
 Y_shifting_dustBox: 10
 Y_badmiton_start_shift_right: 12.5
 
+steal_rotate_times: 30
+
 
 # constant
 span: 0.1
