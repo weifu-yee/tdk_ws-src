@@ -537,12 +537,12 @@ int main(int argc, char **argv){
                         ROS_ERROR("cease ... to capture & detect!!!");
                         cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
                         if(MAP::node_y(MAP::nodeNow) == 229 && capture_rotate_times < 15){
-                            robot_state = "back_rotate";
+                            robot_state = "steal_back_rotate";
                             individual_action = Action::back_rotate;
                             capture_rotate_times ++;
                         }
                         else if(MAP::node_y(MAP::nodeNow) == 49 && capture_rotate_times < 15){
-                            robot_state = "rotate";
+                            robot_state = "steal_rotate";
                             individual_action = Action::rotate;
                             capture_rotate_times ++;
                         }

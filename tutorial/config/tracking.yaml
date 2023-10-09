@@ -1,9 +1,9 @@
-V: 100
-phy_maxMS: 200
-# V: 30
-# phy_maxMS: 30
+# V: 100
+# phy_maxMS: 200
+V: 30
+phy_maxMS: 30
 
-odom_mode: 0
+odom_mode: 1
 freq: 20
 
 start_now: 31
