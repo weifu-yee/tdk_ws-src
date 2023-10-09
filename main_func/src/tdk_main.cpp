@@ -106,6 +106,7 @@ int calibration_delay = 0;
 int steal_rotate_times = 30;
 int capture_rotate_times = 0;
 
+int detectFailTimes = 0;
 int firstNum = 0;
 int secondNum = 0;
 int thirdNum = 0;
