@@ -1,4 +1,5 @@
 <launch>
+    <rosparam file="$(find main_func)/params/justForDebug.yaml" command="load" />
     <include file = "$(find tutorial)/launch/test.launch" />
     <node pkg="main_func" type="tdk_main" name="tdk_main"  output="screen"/>
 </launch>
