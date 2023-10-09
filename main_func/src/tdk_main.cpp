@@ -43,16 +43,18 @@ enum Action{
     tutorial_move,
     odom_move,
     rotate,
+    back_rotate,
     capture_n_detect,
     over_hurdles,
     calibration,
     script_binBaiYa,
+    script_badminton,
     teleop      //just for debug's convenience
 };
 
 namespace sideAction{
-    bool SHOOTER = 0;
-    bool DUSTBOX = 0;
+    bool SHOOTER = false;
+    bool DUSTBOX = false;
 }
 
 Reset reset_state = Reset::wait;
@@ -70,6 +72,7 @@ double after_6_shift = 20;
 double X_after_over_hurdles = 300;
 double Y_shifting_after_binBaiYa = 110;
 double Y_shifting_dustBox = 0;
+double Y_badmiton_start_shift_right = 12.5;
 
 //variables
 int midway_reset_pub_0_times = 0;
@@ -91,6 +94,15 @@ int pitches_state = -1;
 int shooter_state = -1;
 int stOKLast = 0;
 bool shooter_ok = false;
+int num_of_badminton = 0;
+bool dis_state = false;
+int disLast = 0;
+int badminton_process_state = 0;
+bool badminton_ok_state = false;
+int badminton_okLast = 0;
+int sec_move_3_process = 0;
+
+int capture_rotate_times = 0;
 
 //variables_last
 bool isNodeLast = false;
@@ -117,6 +129,9 @@ ros::Subscriber reset_sub;
 ros::Subscriber laji_ok_sub;
 ros::Subscriber pitches_sub;
 ros::Subscriber st_ok_sub;
+ros::Subscriber dis_sub;
+ros::Subscriber badminton_ok_sub;
+
 //pub msgs
 std_msgs::Int8 orientation;
 geometry_msgs::Twist cmd_vel;
@@ -148,7 +163,7 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
     if(ins_vel->linear.z == 1)  ori6State = 1;
     if(ins_vel->linear.z == 2)  ori7State = 1;
-    ROS_INFO_THROTTLE(5, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
+    ROS_INFO_THROTTLE(0.25, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
@@ -187,6 +202,22 @@ void st_ok_callback(const std_msgs::Int8::ConstPtr& st_ok_data){
     }
     stOKLast = stOK;
 }
+void dis_callback(const std_msgs::Int8::ConstPtr& dis_data){
+    int disNow = dis_data->data;
+    if(disNow != disLast && disNow == 1){
+        dis_state = true;
+        ROS_WARN("dis_state = 1 !!!");
+    }
+    disLast = disNow;
+}
+void badminton_ok_callback(const std_msgs::Int8::ConstPtr& badminton_ok_data){
+    int badminton_ok = badminton_ok_data->data;
+    if(badminton_ok != badminton_okLast && badminton_ok == 1){
+        badminton_ok_state = true;
+        ROS_WARN("dis_state = 1 !!!");
+    }
+    badminton_okLast = badminton_ok;
+}
 
 bool amoungDeg(double a, double b){
     if(b == PI)     return a < b - 0.2;
@@ -207,6 +238,7 @@ void GetParam(ros::NodeHandle& nh){
     nh.getParam("/X_after_over_hurdles",X_after_over_hurdles);
     nh.getParam("/Y_shifting_after_binBaiYa",Y_shifting_after_binBaiYa);
     nh.getParam("/Y_shifting_dustBox",Y_shifting_dustBox);
+    nh.getParam("/Y_badmiton_start_shift_right",Y_badmiton_start_shift_right);
     if(!odom_mode){
         ROS_ERROR("^^^^^^^^^^^^^^^^^^fake_odom !!!^^^^^^^^^^^^^^^^^^");
         odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
@@ -234,6 +266,8 @@ void pubSubInit(ros::NodeHandle& nh){
     laji_ok_sub = nh.subscribe("/laji_ok",1,laji_ok_callback);
     pitches_sub = nh.subscribe("/pitches",1,pitches_callback);
     st_ok_sub = nh.subscribe("/st_ok",1,st_ok_callback);
+    dis_sub = nh.subscribe("/dis",1,dis_callback);
+    badminton_ok_sub = nh.subscribe("/badminton_ok",1,badminton_ok_callback);
 }
 void variable_reset(void){
     level_ing = Level::the_wait;
@@ -267,6 +301,15 @@ void variable_reset(void){
     shooter_state = -1;
     stOKLast = 0;
     shooter_ok = false;
+    num_of_badminton = 0;
+    dis_state = false;
+    disLast = 0;
+    badminton_process_state = 0;
+    sec_move_3_process = 0;
+    badminton_ok_state = false;
+    badminton_okLast = 0;
+    capture_rotate_times = 0;
+
     isNodeLast = false;
     stick = 0;
 
@@ -289,6 +332,10 @@ void Reset_print(string s){
 }
 void Level_print(string s){
     cout<<endl; ROS_WARN("_______________ Level::%s _______________",s.c_str()); cout<<endl;
+}
+void Process_print(string s){
+    ROS_WARN("---------------------------------");
+    ROS_ERROR("%s !!!",s.c_str());
 }
 void Done_print(string s){
     cout<<endl;
@@ -381,7 +428,7 @@ int main(int argc, char **argv){
                 if(Done::_badminton)    level_ing = Level::complete;
                 break;
             }
-            case Reset::sec_pass_binBaiYa:{
+            case Reset::sec_pass_binBaiYa:{         //動了順序for測試
                 if(last_reset_state != reset_state){       //初始化
                     Reset_print("sec_pass_binBaiYa");
                     reset__sec_init();
@@ -389,9 +436,10 @@ int main(int argc, char **argv){
 
                 level_ing = Level::sec_move_1;
                 if(Done::_sec_move_1)    level_ing = Level::sec_move_2;
-                if(Done::_sec_move_2)    level_ing = Level::baseball;
-                if(Done::_baseball)    level_ing = Level::badminton;
-                if(Done::_badminton)    level_ing = Level::complete;
+                if(Done::_sec_move_2)    level_ing = Level::badminton;
+                if(Done::_badminton)    level_ing = Level::sec_move_3;
+                if(Done::_sec_move_3)    level_ing = Level::baseball;
+                if(Done::_baseball)    level_ing = Level::complete;
                 break;
             }
             case Reset::sec_pass_baseball:{
@@ -488,8 +536,21 @@ int main(int argc, char **argv){
                         camNum_op = 3*i + 1;
                         ROS_ERROR("cease ... to capture & detect!!!");
                         cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
-                        robot_state = "capture_n_detect";
-                        capt_ed_times++;
+                        if(MAP::node_y(MAP::nodeNow) == 229 && capture_rotate_times < 15){
+                            robot_state = "back_rotate";
+                            individual_action = Action::back_rotate;
+                            capture_rotate_times ++;
+                        }
+                        else if(MAP::node_y(MAP::nodeNow) == 49 && capture_rotate_times < 15){
+                            robot_state = "rotate";
+                            individual_action = Action::rotate;
+                            capture_rotate_times ++;
+                        }
+                        else{robot_state = "capture_n_detect";
+                            capture_rotate_times = 0;
+                            capt_ed_times++;
+                            ODOM::odometry.theta = 0;
+                        }
                     }
                 }
                 //節點12旋轉
@@ -760,23 +821,85 @@ int main(int argc, char **argv){
             case Level::badminton:{
                 if(last_level_ing != level_ing){    //初始化
                     Level_print("badminton");
+                    num_of_badminton = 0;
+                    badminton_process_state = 0;
+                    MAP::nodeNow = 14;
+                    MAP::nodeToGo = 15;
+                    ODOM::oriNow = orientation.data = 3;
                 }
-                if(1){
-                    Done_print("badminton");
-                    robot_state = "waiting";
-                    individual_action = Action::waiting;        //to Delete
-                    Done::_badminton = true;
+                if(badminton_process_state == 0){
+                    robot_state = "tutorial_move";
+                    individual_action = Action::tutorial_move;
+                    if(MAP::nodeNow == 15){
+                        badminton_process_state++;
+                        Process_print("go right to get first badminton");
+                    }
                 }
+                if(badminton_process_state == 1){
+                    robot_state = "odom_move";
+                    individual_action = Action::odom_move;
+                    ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                    cmd_vel.linear.x = 15;
+                    cmd_vel.linear.y = 0;
+                    if(odometry.y < MAP::node_y(18)){
+                        badminton_process_state++;
+                        Process_print("start do the script_badminton");
+                    }
+                }
+                if(badminton_process_state == 2){
+                    robot_state = "odom_move";
+                    individual_action = Action::odom_move;
+                    ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                    cmd_vel.linear.x = -10;
+                    cmd_vel.linear.y = 0;
+                    //距離夠近，原地等待發射結束
+                    if(dis_state == 1){
+                        robot_state = "script_badminton";
+                        individual_action = Action::script_badminton;
+                        //發射結束
+                        if(badminton_ok_state == 1){
+                            num_of_badminton++;
+                            ROS_WARN("---------------------------------");
+                            ROS_WARN("the %dth badminton done, let go next badminton !!!",num_of_badminton);
+                            dis_state = 0;
+                            badminton_ok_state = 0;
+                        }
+                    }
+                    //射完四顆
+                    if(num_of_badminton >= 4){
+                        Done_print("badminton");
+                        robot_state = "waiting";
+                        individual_action = Action::waiting;        //to Delete
+                        Done::_badminton = true;
+                    }
+                }
+                
                 break;
             }
             case Level::sec_move_3:{
                 if(last_level_ing != level_ing){    //初始化
                     Level_print("sec_move_3");
+                    sec_move_3_process = 0;
                 }
-                if(1){
+                if(sec_move_3_process == 0){
+                    robot_state = "odom_move";
+                    individual_action = Action::odom_move;
+                    ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
+                    cmd_vel.linear.x = 15;
+                    cmd_vel.linear.y = 0;
+                    if(odometry.y < MAP::node_y(15)){
+                        Process_print("back on node 15 -> tutorial_move");
+                        sec_move_3_process++;
+                    }
+                }
+                if(sec_move_3_process == 1){
+                    ODOM::oriNow = orientation.data = MAP::cmd_ori(15, 14);
+                    robot_state = "tutorial_move";
+                    individual_action = Action::tutorial_move;
+                }
+
+                if(MAP::nodeNow == 14){
                     Done_print("sec_move_3");
-                    robot_state = "waiting";
-                    individual_action = Action::waiting;        //to Delete
                     Done::_sec_move_3 = true;
                 }
                 break;
@@ -831,7 +954,7 @@ int main(int argc, char **argv){
                     //決定方向
                     ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
                     //刪除來的路徑
-                    if(MAP::nodeToGo != 16 && MAP::nodeToGo != 17)
+                    if(MAP::nodeToGo != 16 && MAP::nodeToGo != 17 && MAP::nodeToGo != 15)
                         MAP::eraseEdge(MAP::nodeNow, MAP::nodeToGo);
                     //重製"在節點上"
                     onNode = false;
@@ -855,6 +978,11 @@ int main(int argc, char **argv){
             }
             case Action::rotate:{
                 ODOM::oriNow = orientation.data = 4;
+                orientation_pub.publish(orientation);
+                break;
+            }
+            case Action::back_rotate:{
+                ODOM::oriNow = orientation.data = 5;
                 orientation_pub.publish(orientation);
                 break;
             }
@@ -917,6 +1045,11 @@ int main(int argc, char **argv){
                 orientation_pub.publish(orientation);
                 break;
             }
+            case Action::script_badminton:{
+                ODOM::oriNow = orientation.data = -1;
+                orientation_pub.publish(orientation);
+                break;
+            }
             case Action::teleop:{
                 ODOM::oriNow = orientation.data = 10;
                 orientation_pub.publish(orientation);
@@ -949,7 +1082,7 @@ int main(int argc, char **argv){
         }
 
 
-        ROS_WARN_THROTTLE(5, "robot_state: %s",robot_state.c_str());
+        ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
         ros::spinOnce();
         rate.sleep();
     }
