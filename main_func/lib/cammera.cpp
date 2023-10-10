@@ -1,17 +1,27 @@
 #include "cammera.h"
 #include "odom.h"
 
+int firstNum1 = 1;
+int firstNum2 = 3;
+int secondNum1 = 4;
+int secondNum2 = 6;
+int thirdNum1 = 7;
+int thirdNum2 = 9;
+
 set<int> CAM::numbers;
 bool CAM::cease = 0;
 double CAM::capt_x[] = {125, 300, 420};
 vector<vector<int>> CAM::predict_numbers(4);
 void CAM::initPredictNumbers(){
-    predict_numbers[1].push_back(1);
-    predict_numbers[1].push_back(3);
-    predict_numbers[2].push_back(4);
-    predict_numbers[2].push_back(6);
-    predict_numbers[3].push_back(7);
-    predict_numbers[3].push_back(9);
+    predict_numbers[1].clear();
+    predict_numbers[2].clear();
+    predict_numbers[3].clear();
+    predict_numbers[1].push_back(firstNum1);
+    predict_numbers[1].push_back(firstNum2);
+    predict_numbers[2].push_back(secondNum1);
+    predict_numbers[2].push_back(secondNum2);
+    predict_numbers[3].push_back(thirdNum1);
+    predict_numbers[3].push_back(thirdNum2);
 }
 
 void CAM::what_to_erase(int a, int b){

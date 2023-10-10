@@ -107,9 +107,6 @@ int steal_rotate_times = 30;
 int capture_rotate_times = 0;
 
 int detectFailTimes = 0;
-int firstNum = 0;
-int secondNum = 0;
-int thirdNum = 0;
 
 //variables_last
 bool isNodeLast = false;
@@ -232,10 +229,6 @@ bool amoungDeg(double a, double b){
     return a < b || a > PI - 0.2;
 }
 void GetParam(ros::NodeHandle& nh){
-    nh.getParam("/firstNum",firstNum);
-    nh.getParam("/secondNum",secondNum);
-    nh.getParam("/thirdNum",thirdNum);
-
     nh.getParam("/odom_mode",odom_mode);
     nh.getParam("/freq",freq);
     nh.getParam("/tolerence",tolerence);
@@ -260,7 +253,14 @@ void GetParam(ros::NodeHandle& nh){
         odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
     }
 }
-
+void DebugNum(ros::NodeHandle& nh){
+    nh.getParam("/firstNum1",firstNum1);
+    nh.getParam("/firstNum2",firstNum2);
+    nh.getParam("/secondNum1",secondNum1);
+    nh.getParam("/secondNum2",secondNum2);
+    nh.getParam("/thirdNum1",thirdNum1);
+    nh.getParam("/thirdNum2",thirdNum2);
+}
 
 void pubSubInit(ros::NodeHandle& nh){
     orientation_pub = nh.advertise<std_msgs::Int8>("/cmd_ori", 1);
@@ -369,12 +369,13 @@ int main(int argc, char **argv){
     ros::NodeHandle nh;
     MAP::buildNode();
     MAP::initBuildEdge();
+    DebugNum(nh);
     CAM::initPredictNumbers();
     pubSubInit(nh);
     GetParam(nh);
     ros::Rate rate(freq);
     while(nh.ok()){
-
+        
         //重置狀態
         switch(reset_state){
             case Reset::wait:{
@@ -385,6 +386,10 @@ int main(int argc, char **argv){
                 }
 
                 variable_reset();
+                DebugNum(nh);
+                CAM::initPredictNumbers();
+                // cout<<endl; ROS_INFO("%d,%d,%d,%d,%d,%d",firstNum1, firstNum2,secondNum1,secondNum2,thirdNum1,thirdNum2);   cout<<endl;
+
 
                 robot_state = "waiting";
                 individual_action = Action::waiting;
