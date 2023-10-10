@@ -1037,7 +1037,7 @@ int main(int argc, char **argv){
                     }
                 }
                 _a = a;     _b = b;
-                if(_pub4 == -1){
+                if(_pub4 == -2){
                     if(!b && a != CAM::predict_numbers[capt_ed_times][0]){
                         numbers.insert(CAM::predict_numbers[capt_ed_times][0]);
                         ROS_ERROR("numbers.insert(%d);",CAM::predict_numbers[capt_ed_times][0]);
