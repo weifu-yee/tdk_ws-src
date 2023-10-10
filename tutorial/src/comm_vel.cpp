@@ -94,7 +94,7 @@ int main(int argc, char **argv)
         else if(ori == 10){
 
         }
-        else if(ori >= 0 && ori < 4 || ori == -2){
+        else if(ori >= 0 && ori < 4 || ori == -2 || ori <= -5){
             pub.publish(vel);
         }
 

@@ -219,10 +219,13 @@ int main(int argc, char** argv) {
         nh.getParam("/vel_limit",vel_limit);
         nh.getParam("/w_limit",w_limit);
 
-        if(ori >= 0 && ori < 4 || ori == -2 || ori == 10 || ori == -1){
+        if(ori >= 0 && ori < 4 || ori == -2 || ori == 10 || ori == -1 || ori <= -5){
             if(ori == -2){
                 _phy_maxMS = slowMS;
                 ori = last_ori;
+            }else if(ori <= -5){
+                _phy_maxMS = slowMS;
+                ori += 8;
             }else{
                 _phy_maxMS = phy_maxMS;
             }
