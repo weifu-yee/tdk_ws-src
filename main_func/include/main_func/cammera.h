@@ -3,6 +3,13 @@
 
 #include "map.h"
 
+extern int firstNum1;
+extern int firstNum2;
+extern int secondNum1;
+extern int secondNum2;
+extern int thirdNum1;
+extern int thirdNum2;
+
 namespace CAM{
     extern std::set<int> numbers;
     extern bool cease;
