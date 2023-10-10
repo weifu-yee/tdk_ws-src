@@ -4,6 +4,15 @@
 set<int> CAM::numbers;
 bool CAM::cease = 0;
 double CAM::capt_x[] = {125, 300, 420};
+vector<vector<int>> CAM::predict_numbers(4);
+void CAM::initPredictNumbers(){
+    predict_numbers[1].push_back(1);
+    predict_numbers[1].push_back(3);
+    predict_numbers[2].push_back(4);
+    predict_numbers[2].push_back(6);
+    predict_numbers[3].push_back(7);
+    predict_numbers[3].push_back(9);
+}
 
 void CAM::what_to_erase(int a, int b){
     auto eraseBox = [&](int u){

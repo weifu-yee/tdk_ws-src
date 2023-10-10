@@ -161,7 +161,7 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
     for(auto i:the_numbers->data){
         CAM::numbers.insert(i);
     }
-    _pub4 = -1;
+    _pub4 = -2;
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     if(CAM::cease)  return;
@@ -365,6 +365,7 @@ int main(int argc, char **argv){
     ros::NodeHandle nh;
     MAP::buildNode();
     MAP::initBuildEdge();
+    CAM::initPredictNumbers();
     pubSubInit(nh);
     GetParam(nh);
     ros::Rate rate(freq);
@@ -1036,6 +1037,16 @@ int main(int argc, char **argv){
                     }
                 }
                 _a = a;     _b = b;
+                if(_pub4 == -1){
+                    if(!b && a != CAM::predict_numbers[capt_ed_times][0]){
+                        numbers.insert(CAM::predict_numbers[capt_ed_times][0]);
+                        ROS_ERROR("numbers.insert(%d);",CAM::predict_numbers[capt_ed_times][0]);
+                    }
+                    if(!a || a == CAM::predict_numbers[capt_ed_times][0]){
+                        numbers.insert(CAM::predict_numbers[capt_ed_times][1]);
+                        ROS_ERROR("numbers.insert(%d);",CAM::predict_numbers[capt_ed_times][1]);
+                    }
+                }
                 _pub4 ++;
                 break;
             }
