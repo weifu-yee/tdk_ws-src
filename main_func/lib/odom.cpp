@@ -45,6 +45,11 @@ void ODOM::initSlowPoints(){
     ODOM::slow_points.push(42);
     ODOM::slow_points.push(41);
 }
+void ODOM::SECinitSlowPoints(){
+    while(!ODOM::slow_points.empty())   ODOM::slow_points.pop();
+    ODOM::slow_points.push(46);
+    ODOM::slow_points.push(45);
+}
 bool ODOM::slow(int nodeToGo){
     if(MAP::disToOdom(nodeToGo) < decelerationZone)     return true;
     return false;

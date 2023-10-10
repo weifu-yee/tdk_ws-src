@@ -28,6 +28,7 @@ namespace ODOM{
     extern bool slow_mode;
     extern std::stack<int>   slow_points;
     void initSlowPoints(void);
+    void SECinitSlowPoints(void);
     bool slow(int nodeToGo);
 }
 using namespace ODOM;

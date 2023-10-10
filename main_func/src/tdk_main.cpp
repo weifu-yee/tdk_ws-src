@@ -334,6 +334,7 @@ void variable_reset(void){
 }
 void reset__sec_init(){
     ODOM::oriNow = orientation.data = MAP::startPointInit(sec_start_now, sec_start_togo);
+    ODOM::SECinitSlowPoints();
     onNode = false;
     if(sec_start_now == 14 && sec_start_togo == 17){
         Done::_sec_move_1 = true;
@@ -449,6 +450,9 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     Reset_print("sec_pass_binBaiYa");
                     reset__sec_init();
+                    if(!ODOM::slow_points.empty())
+                        ODOM::slow_points.pop();
+                    ODOM::slow_mode = false;
                 }
 
                 level_ing = Level::sec_move_1;
@@ -500,6 +504,9 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     Reset_print("sec_last_baseball");
                     reset__sec_init();
+                    if(!ODOM::slow_points.empty())
+                        ODOM::slow_points.pop();
+                    ODOM::slow_mode = false;
                 }
 
                 level_ing = Level::sec_move_1;
@@ -512,6 +519,9 @@ int main(int argc, char **argv){
                 if(last_reset_state != reset_state){       //初始化
                     Reset_print("sec_last_badminton");
                     reset__sec_init();
+                    if(!ODOM::slow_points.empty())
+                        ODOM::slow_points.pop();
+                    ODOM::slow_mode = false;
                 }
 
                 level_ing = Level::sec_move_1;
@@ -550,6 +560,7 @@ int main(int argc, char **argv){
                 for(int i = 0; i <= 2; i++){
                     if(capt_ed_times == i && odometry.x >= CAM::capt_x[i]){
                         if(i == 1 && !(stick == true && stick_times > 5 || after_6_shift_state == 2))    continue;
+                        if(i == 2 && MAP::nodeToGo < 7)    continue;
                         CAM::numbers.clear();
                         camNum_op = 3*i + 1;
                         ROS_ERROR("cease ... to capture & detect: %d th times!!!",capt_ed_times + 1);
@@ -567,11 +578,19 @@ int main(int argc, char **argv){
                         else{
                             robot_state = "capture_n_detect";
                             capt_ed_times++;
+                            ODOM::slow_mode = false;
                         }
                     }
                 }
                 //節點12旋轉
                 if(MAP::nodeNow == 12 && !rotate_ed){
+                    if(ODOM::slow_points.top() == 44){
+                        if(!ODOM::slow_points.empty())
+                        ODOM::slow_points.pop();
+                        ODOM::slow_mode = false;
+
+                        ROS_INFO("ODOM::slow_points.top(): %d",ODOM::slow_points.top());
+                    }
                     thetaToGo = degrees[(ODOM::faceTo + 1) % 4];
                     ROS_WARN("---------------------------------");
                     ROS_WARN("SCRIPT::rotateCCW, faceTo: %f -> %f",degrees[ODOM::faceTo],thetaToGo);
@@ -607,6 +626,22 @@ int main(int argc, char **argv){
                         }else{
                             CAM::what_to_erase(_a, _b);
                             ROS_ERROR("CAM::what_to_erase(%d, %d)",_a,_b);
+
+                            if(!ODOM::slow_points.empty())  ODOM::slow_points.pop();
+                            if(capt_ed_times == 1 || capt_ed_times == 2){
+                                int temp;
+                                for(int i = capt_ed_times*3 - 2; i <= capt_ed_times*3; i ++){
+                                    if(i == _a || i == _b);
+                                    else    temp = i;
+                                }
+                                if(!ODOM::slow_points.empty()){
+                                    int top = ODOM::slow_points.top();
+                                    MAP::node[top].second.second = MAP::node_y(temp);
+                                    ROS_ERROR("MAP::node[top]--> y : %f", MAP::node_y(top));
+                                }
+                            }
+                            ROS_INFO("ODOM::slow_points.top(): %d",ODOM::slow_points.top());
+
                             ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
                             orientation_pub.publish(orientation);
                             robot_state = "tutorial_move";
@@ -713,6 +748,10 @@ int main(int argc, char **argv){
                     ODOM::oriNow = orientation.data = 2;
                     orientation_pub.publish(orientation);
                     ODOM::odometry.y = MAP::node_y(16) + Y_shifting_after_binBaiYa;
+
+                    if(!ODOM::slow_points.empty())  ODOM::slow_points.pop();
+                    ODOM::slow_mode = false;
+                    ROS_INFO("ODOM::slow_points.top(): %d",ODOM::slow_points.top());
                 }
 
                 robot_state = "tutorial_move";
@@ -990,15 +1029,15 @@ int main(int argc, char **argv){
                         orientation.data);
                 }
 
-                //靠近node時減速
+                //靠近slow_points時減速
                 if(ODOM::slow(ODOM::slow_points.top())){
                     ROS_WARN("slow_mode");
                     ODOM::slow_mode = true;
                     orientation.data = (orientation.data > -5)? orientation.data - 8: orientation.data;
                 }else if(ODOM::slow_mode){
                     Process_print("slow_mode_END");
+                    if(orientation.data <= -5)  orientation.data += 8;
                     ODOM::slow_mode = false;
-                    if(!ODOM::slow_points.empty())  ODOM::slow_points.pop();
                 }
                     
 
