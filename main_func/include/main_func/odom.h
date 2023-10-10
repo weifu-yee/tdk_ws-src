@@ -4,6 +4,8 @@
 #include "map.h"
 #include "geometry_msgs/Twist.h"
 #include <math.h>
+#include <stack>
+
 #define PI 3.1415926
 #define wheelRadius 0.0498      //m
 #define carWidth 0.23704           //m
@@ -17,13 +19,14 @@ public:
     Odometry(double _x, double _y, double _theta);
     double x, y, theta;
     void update(const geometry_msgs::Twist::ConstPtr& ins_vel);
-    double vel_World2Car(char coor, double Vx_world, double Vy_world);
 };
 
 namespace ODOM{
     extern Odometry odometry;
     extern int oriNow;
     extern int faceTo;
+    extern std::stack<int>   slow_points;
+    void initSlowPoints(void);
     bool slow(int nodeToGo);
 }
 using namespace ODOM;

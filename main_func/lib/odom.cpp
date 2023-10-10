@@ -10,9 +10,9 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
     if(std::abs(dt) > 1)  dt = 0;
 
     double x_car, y_car;
-    if(ODOM::oriNow >= 10 || ODOM::oriNow % 2 == 0)
+    // if(ODOM::oriNow >= 10 || ODOM::oriNow % 2 == 0)
         x_car = ins_vel->linear.x * (dt);
-    if(ODOM::oriNow >= 10 || ODOM::oriNow % 2 == 1)
+    // if(ODOM::oriNow >= 10 || ODOM::oriNow % 2 == 1)
         y_car = ins_vel->linear.y * (dt);
 
     int xMat[] = {1, 0, -1, 0};
@@ -29,16 +29,19 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
     last_time = current_time;
     return;
 }
-double Odometry::vel_World2Car(char coor, double Vx_world, double Vy_world){
-	if(coor == 'x')
-        return Vx_world * cos(theta) - Vy_world * sin(theta);
-	else
-		return Vx_world * cos(theta) + Vy_world * sin(theta);
-}
+
 
 Odometry ODOM::odometry(0, 0, 0);
 int ODOM::oriNow = 0;
 int ODOM::faceTo = 0;
+std::stack<int> ODOM::slow_points;
+void ODOM::initSlowPoints(){
+    while(!ODOM::slow_points.empty())   ODOM::slow_points.pop();
+    // ODOM::slow_points.push(25);
+    // ODOM::slow_points.push(26);
+    // ODOM::slow_points.push(27);
+    // ODOM::slow_points.push(28);
+}
 bool ODOM::slow(int nodeToGo){
     if(MAP::disToOdom(nodeToGo) < decelerationZone)     return true;
     return false;
