@@ -336,6 +336,7 @@ void reset__sec_init(){
     ODOM::oriNow = orientation.data = MAP::startPointInit(sec_start_now, sec_start_togo);
     ODOM::SECinitSlowPoints();
     onNode = false;
+    ori6State = 1;
     if(sec_start_now == 14 && sec_start_togo == 17){
         Done::_sec_move_1 = true;
         Done::_sec_move_2 = true;
