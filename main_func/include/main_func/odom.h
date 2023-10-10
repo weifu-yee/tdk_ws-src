@@ -25,6 +25,7 @@ namespace ODOM{
     extern Odometry odometry;
     extern int oriNow;
     extern int faceTo;
+    extern bool slow_mode;
     extern std::stack<int>   slow_points;
     void initSlowPoints(void);
     bool slow(int nodeToGo);

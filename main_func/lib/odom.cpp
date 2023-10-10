@@ -34,13 +34,16 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
 Odometry ODOM::odometry(0, 0, 0);
 int ODOM::oriNow = 0;
 int ODOM::faceTo = 0;
+bool ODOM::slow_mode = false;
 std::stack<int> ODOM::slow_points;
 void ODOM::initSlowPoints(){
     while(!ODOM::slow_points.empty())   ODOM::slow_points.pop();
-    // ODOM::slow_points.push(25);
-    // ODOM::slow_points.push(26);
-    // ODOM::slow_points.push(27);
-    // ODOM::slow_points.push(28);
+    ODOM::slow_points.push(46);
+    ODOM::slow_points.push(45);
+    ODOM::slow_points.push(44);
+    ODOM::slow_points.push(43);
+    ODOM::slow_points.push(42);
+    ODOM::slow_points.push(41);
 }
 bool ODOM::slow(int nodeToGo){
     if(MAP::disToOdom(nodeToGo) < decelerationZone)     return true;

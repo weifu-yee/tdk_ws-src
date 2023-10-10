@@ -286,6 +286,7 @@ void variable_reset(void){
     level_ing = Level::the_wait;
 
     CAM::numbers.clear();
+    ODOM::initSlowPoints();
     Done::_first = 0;
     Done::_sec_move_1 = 0;
     Done::_binBaiYa = 0;
@@ -298,6 +299,7 @@ void variable_reset(void){
     cmd_vel.angular.z = 0;
     sideAction::DUSTBOX = false;
     sideAction::SHOOTER = false;
+    ODOM::slow_mode = false;
 
     onNode = false;
     capt_ed_times = 0;
@@ -547,10 +549,10 @@ int main(int argc, char **argv){
                 //三次辨識
                 for(int i = 0; i <= 2; i++){
                     if(capt_ed_times == i && odometry.x >= CAM::capt_x[i]){
-                        if(i == 1 && !ori6State)    continue;
-                        CAM::numbers.clear();       
+                        if(i == 1 && !(stick == true && stick_times > 5 || after_6_shift_state == 2))    continue;
+                        CAM::numbers.clear();
                         camNum_op = 3*i + 1;
-                        ROS_ERROR("cease ... to capture & detect!!!");
+                        ROS_ERROR("cease ... to capture & detect: %d th times!!!",capt_ed_times + 1);
                         cam_flag = 0, _a = 0, _b = 0, _pub4 = 0;
                         if(MAP::node_y(MAP::nodeNow) == 229 && capture_rotate_times < steal_rotate_times){
                             robot_state = "steal_back_rotate";
@@ -564,7 +566,6 @@ int main(int argc, char **argv){
                         }
                         else{
                             robot_state = "capture_n_detect";
-                            // capture_rotate_times = 0;
                             capt_ed_times++;
                         }
                     }
@@ -643,8 +644,6 @@ int main(int argc, char **argv){
                         orientation_pub.publish(orientation);
                         ODOM::odometry.x = X_after_over_hurdles;
                         ODOM::odometry.y = MAP::node[MAP::nodeNow].second.second;
-                        robot_state = "tutorial_move";
-                        individual_action = Action::tutorial_move;
                     }
                 }
                 else if(robot_state == "rotate"){       //節點12旋轉
@@ -992,7 +991,16 @@ int main(int argc, char **argv){
                 }
 
                 //靠近node時減速
-                if(ODOM::slow(MAP::nodeToGo))     orientation.data = -2;
+                if(ODOM::slow(ODOM::slow_points.top())){
+                    ROS_WARN("slow_mode");
+                    ODOM::slow_mode = true;
+                    orientation.data = (orientation.data > -5)? orientation.data - 8: orientation.data;
+                }else if(ODOM::slow_mode){
+                    Process_print("slow_mode_END");
+                    ODOM::slow_mode = false;
+                    if(!ODOM::slow_points.empty())  ODOM::slow_points.pop();
+                }
+                    
 
                 orientation_pub.publish(orientation);
                 break;
