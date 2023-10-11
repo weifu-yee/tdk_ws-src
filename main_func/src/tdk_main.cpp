@@ -167,7 +167,7 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
     if(ins_vel->linear.z == 1)  ori6State = 1;
     if(ins_vel->linear.z == 2)  ori7State = 1;
-    ROS_INFO_THROTTLE(1, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
+    ROS_INFO_THROTTLE(0.05, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
@@ -224,9 +224,9 @@ void badminton_ok_callback(const std_msgs::Int8::ConstPtr& badminton_ok_data){
 }
 
 bool amoungDeg(double a, double b){
-    if(b == PI)     return a < b - 0.2;
+    if(b == PI)     return a < b && a > 0;
     if(b >= 0)  return a < b;
-    return a < b || a > PI - 0.2;
+    return a < b || a == PI;
 }
 void GetParam(ros::NodeHandle& nh){
     nh.getParam("/odom_mode",odom_mode);
@@ -393,7 +393,7 @@ int main(int argc, char **argv){
                 variable_reset();
                 DebugNum(nh);
                 CAM::initPredictNumbers();
-                ROS_INFO("%d,%d,%d,%d,%d,%d",firstNum1, firstNum2,secondNum1,secondNum2,thirdNum1,thirdNum2);
+                // ROS_INFO("%d,%d,%d,%d,%d,%d",firstNum1, firstNum2,secondNum1,secondNum2,thirdNum1,thirdNum2);
 
 
                 robot_state = "waiting";
@@ -648,10 +648,9 @@ int main(int argc, char **argv){
                                 if(!ODOM::slow_points.empty()){
                                     int top = ODOM::slow_points.top();
                                     MAP::node[top].second.second = MAP::node_y(temp);
-                                    ROS_ERROR("MAP::node[top]--> y : %f", MAP::node_y(top));
+                                    ROS_ERROR("ODOM::slow_points.top(): %d (%f, %f)",top,MAP::node_x(top),MAP::node_y(top));
                                 }
                             }
-                            ROS_INFO("ODOM::slow_points.top(): %d",ODOM::slow_points.top());
 
                             ODOM::oriNow = orientation.data = MAP::cmd_ori(MAP::nodeNow, MAP::nodeToGo);
                             orientation_pub.publish(orientation);
@@ -1081,7 +1080,6 @@ int main(int argc, char **argv){
                 int a = 0, b = 0;
 
                 if(_pub4 == -2){
-
                     if(capt_ed_times == 1 && firstNum1 && firstNum2){
                         numbers.clear();
                         numbers.insert(firstNum1);  numbers.insert(firstNum2);
@@ -1097,7 +1095,6 @@ int main(int argc, char **argv){
                         numbers.insert(thirdNum1);  numbers.insert(thirdNum2);
                         debug_print(thirdNum1,thirdNum2);
                     }
-
                 }
 
                 for(int i = camNum_op; i <= camNum_op + 2; i++){
@@ -1108,7 +1105,6 @@ int main(int argc, char **argv){
                         else if(!b){
                             b = i;
                             cam_flag = 1;
-                            ROS_ERROR("_pub4 = %d",_pub4);
                         }
                         else{
                             cam_flag = 0;   
@@ -1118,16 +1114,7 @@ int main(int argc, char **argv){
                 }
                 _a = a;     _b = b;
 
-                if(_pub4 == -2){
-                    if(!b && a != CAM::predict_numbers[capt_ed_times][0]){
-                        numbers.insert(CAM::predict_numbers[capt_ed_times][0]);
-                        ROS_ERROR("numbers.insert(%d);",CAM::predict_numbers[capt_ed_times][0]);
-                    }
-                    if(!a || a == CAM::predict_numbers[capt_ed_times][0]){
-                        numbers.insert(CAM::predict_numbers[capt_ed_times][1]);
-                        ROS_ERROR("numbers.insert(%d);",CAM::predict_numbers[capt_ed_times][1]);
-                    }
-                }
+                if(_pub4 == -2)     CAM::what_to_insert(capt_ed_times, a, b);
                 
                 _pub4 ++;
                 break;
