@@ -10,7 +10,7 @@ import os
 pub = rospy.Publisher('/numbers', Int32MultiArray, queue_size=10)
 msg = Int32MultiArray()
 
-model = YOLO("/home/ditrobotics/tdk_ws/src/yolov8/src/best.pt")
+model = YOLO("/home/ditrobotics/tdk_ws/src/yolov8/src/1011_ver.pt")
 
 prev = False
 def detect_callback(msg):
