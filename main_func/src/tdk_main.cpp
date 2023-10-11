@@ -942,6 +942,8 @@ int main(int argc, char **argv){
                     cmd_vel.linear.y = 0;
                     if(odometry.y < MAP::node_y(18)){
                         badminton_process_state++;
+                        ros::Rate rrr(1);
+                        rrr.sleep();
                         Process_print("start do the script_badminton");
                         dis_state = 0;
                         badminton_ok_state = 0;
@@ -952,18 +954,18 @@ int main(int argc, char **argv){
                     robot_state = "odom_move";
                     individual_action = Action::odom_move;
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-                    cmd_vel.linear.x = -4;
+                    cmd_vel.linear.x = -6;
                     cmd_vel.linear.y = 0;
                     //距離夠近，原地等待發射結束
 
 
-                    y_badm[0] = bad1;
-                    y_badm[1] = bad1 + 20;
-                    y_badm[2] = bad1 + 40;
-                    y_badm[3] = bad1 + 60;
-                    if(ODOM::odometry.y > y_badm[num_of_badminton]){
-                        dis_state = 1;
-                    }
+                    // y_badm[0] = bad1;
+                    // y_badm[1] = bad1 + 20;
+                    // y_badm[2] = bad1 + 40;
+                    // y_badm[3] = bad1 + 60;
+                    // if(ODOM::odometry.y > y_badm[num_of_badminton]){
+                    //     dis_state = 1;
+                    // }
 
                     if(dis_state == 1){
                         robot_state = "script_badminton";
