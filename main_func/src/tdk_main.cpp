@@ -388,6 +388,7 @@ int main(int argc, char **argv){
                     cout<<endl; ROS_ERROR("################### midway reset Q_Q ###################"); cout<<endl;
                     MAP::initBuildEdge();
                     midway_reset_pub_0_times = 0;
+                    // CAM::midway_reset_debug();
                 }
 
                 variable_reset();

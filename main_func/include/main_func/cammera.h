@@ -17,6 +17,7 @@ namespace CAM{
     extern std::vector<std::vector<int>> predict_numbers;
     void initPredictNumbers(void);
     void what_to_insert(int t, int a, int b);
+    void midway_reset_debug();
     void what_to_erase(int a, int b);
 }
 using namespace CAM;

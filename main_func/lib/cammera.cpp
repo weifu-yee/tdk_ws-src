@@ -44,7 +44,14 @@ void CAM::what_to_insert(int t, int a, int b){
         }
     }
 }
-
+void CAM::midway_reset_debug(){
+    int firstNum1 = 0;
+    int firstNum2 = 0;
+    int secondNum1 = 0;
+    int secondNum2 = 0;
+    int thirdNum1 = 0;
+    int thirdNum2 = 0;
+}
 void CAM::what_to_erase(int a, int b){
     auto eraseBox = [&](int u){
         if(u < 7)
