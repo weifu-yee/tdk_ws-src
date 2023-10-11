@@ -570,7 +570,7 @@ int main(int argc, char **argv){
                 //三次辨識
                 for(int i = 0; i <= 2; i++){
                     if(capt_ed_times == i && odometry.x >= CAM::capt_x[i]){
-                        if(i == 1 && !(stick == true && stick_times > 5 || after_6_shift_state == 2))    continue;
+                        if(i == 1 && !(after_6_shift_state == 3))    continue;
                         if(i == 2 && MAP::nodeToGo < 7)    continue;
                         CAM::numbers.clear();
                         camNum_op = 3*i + 1;
@@ -689,6 +689,7 @@ int main(int argc, char **argv){
                         orientation_pub.publish(orientation);
                         ODOM::odometry.x = X_after_over_hurdles;
                         ODOM::odometry.y = MAP::node[MAP::nodeNow].second.second;
+                        after_6_shift_state = 3;
                     }
                 }
                 else if(robot_state == "rotate"){       //節點12旋轉
@@ -1039,16 +1040,9 @@ int main(int argc, char **argv){
                         orientation.data);
                 }
 
-                //靠近slow_points時減速
-                if(ODOM::slow(ODOM::slow_points.top())){
-                    ROS_WARN("slow_mode");
-                    ODOM::slow_mode = true;
+                //靠近節點時減速
+                if(ODOM::slow(MAP::nodeToGo))
                     orientation.data = (orientation.data > -5)? orientation.data - 8: orientation.data;
-                }else if(ODOM::slow_mode){
-                    Process_print("slow_mode_END");
-                    if(orientation.data <= -5)  orientation.data += 8;
-                    ODOM::slow_mode = false;
-                }
                     
 
                 orientation_pub.publish(orientation);
