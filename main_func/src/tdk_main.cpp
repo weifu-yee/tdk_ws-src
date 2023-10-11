@@ -75,6 +75,8 @@ double Y_shifting_dustBox = 0;
 double Y_badmiton_start_shift_right = 12.5;
 
 //variables
+int the_first_first_capndet = 0;
+
 int midway_reset_pub_0_times = 0;
 bool onNode = false;
 int capt_ed_times = 0;
@@ -336,9 +338,6 @@ void variable_reset(void){
 
     isNodeLast = false;
     stick = 0;
-
-    cam_mode.data = 4;
-    cam_pub.publish(cam_mode);
 }
 void reset__sec_init(){
     ODOM::oriNow = orientation.data = MAP::startPointInit(sec_start_now, sec_start_togo);
@@ -403,6 +402,9 @@ int main(int argc, char **argv){
                 CAM::initPredictNumbers();
                 // ROS_INFO("%d,%d,%d,%d,%d,%d",firstNum1, firstNum2,secondNum1,secondNum2,thirdNum1,thirdNum2);
 
+
+                cam_mode.data = 4;
+                cam_pub.publish(cam_mode);
 
                 robot_state = "waiting";
                 individual_action = Action::waiting;
