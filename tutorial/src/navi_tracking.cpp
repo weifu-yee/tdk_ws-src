@@ -30,6 +30,9 @@ int stick_num;
 double V = 0, vel_limit = 0, w_limit = 0;
 double u_d = 0, u_theta = 0, u = 0;
 geometry_msgs::Twist vel;
+
+int allow_overshoot_times = 0;
+
 //tracker arguments --from Arduino
 double Err_d,Err_theta;
 int8_t std_tracker_data[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},temp[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1};
@@ -110,7 +113,7 @@ void error_cal(){
     int counter_F,counter_B,total_Err_F,total_Err_B;
     double Err_F,Err_B;
     size_t i;
-    for(i = 0,PID_mode = false,stick_num = 0,  counter_F = 0,counter_B = 0,total_Err_F = 0,total_Err_B = 0; i < 20; ++i){
+    for(i = 0,PID_mode = false,stick_num = 0,  counter_F = 0,counter_B = 0,total_Err_F = 0,total_Err_B = 0, allow_overshoot_times = 0; i < 20; ++i){
             if(std_tracker_data[i] == black){
                 PID_mode = true;
                 stick_num++;
@@ -274,7 +277,7 @@ int main(int argc, char** argv) {
             double VY = V*sin(((double)ori)*0.5*pi) + u_d*cos(((double)ori)*0.5*pi);
 
 //
-            if(!PID_mode && prev_ori != -1){
+            if(allow_overshoot_times++ < 50 && !PID_mode && prev_ori != -1){
                 u_d = node_overshoot_logic();
                 u_theta = 0;
                 VX = -u_d*sin(((double)ori)*0.5*pi);
