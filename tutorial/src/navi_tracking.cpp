@@ -22,6 +22,7 @@ int oriSub_ed = -1;
 int ori=-1, prev_ori = -1;
 std_msgs::Bool node_point;
 std_msgs::Bool stick;
+int reset = 0;
 
 bool PID_mode, EX_mode;
 bool _PID_mode;
@@ -36,6 +37,11 @@ int8_t std_tracker_data[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},temp[20]
 int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
 
 bool ori10 = false;
+
+void reset_callback(const std_msgs::Int8::ConstPtr& msg)
+{
+    reset = msg->data;
+}
 
 
 // 1. tracker data standardrize   robot coordinate convert to tracker coordinate
@@ -189,6 +195,7 @@ int main(int argc, char** argv) {
     ros::Publisher pub_node = nh.advertise<std_msgs::Bool>("node_detect", 10);;   //map
     ros::Publisher pub_vel = nh.advertise<geometry_msgs::Twist>("vel",10);
     ros::Publisher pub_stickOnLine = nh.advertise<std_msgs::Bool>("stickOnLine", 10);
+    ros::Subscriber reset_sub = nh.subscribe("/reset",1,reset_callback);
 
     double span=0.05;
     
@@ -218,6 +225,12 @@ int main(int argc, char** argv) {
         nh.getParam("/V",V);
         nh.getParam("/vel_limit",vel_limit);
         nh.getParam("/w_limit",w_limit);
+
+        if(!reset){
+            ori = -1;
+            prev_ori = -1;
+            ROS_INFO_THROTTLE(1, "navi_tracking_reset ~ ~");
+        }
 
         if(ori >= 0 && ori < 4 || ori == -2 || ori == 10 || ori == -1 || ori <= -5){
             if(ori == -2){

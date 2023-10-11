@@ -3,7 +3,7 @@
 V: 30
 phy_maxMS: 30
 
-odom_mode: 0
+odom_mode: 1
 freq: 20
 
 start_now: 31
@@ -16,7 +16,7 @@ tolerence: 30
 decelerationZone: 30
 nodeLoseConpDELAY: 15
 X_after_over_hurdles: 324
-after_6_shift: 40
+after_6_shift: 20
 Y_shifting_after_binBaiYa: 110
 Y_shifting_dustBox: 10
 Y_badmiton_start_shift_right: 12.5

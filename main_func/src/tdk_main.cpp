@@ -914,7 +914,7 @@ int main(int argc, char **argv){
                     robot_state = "odom_move";
                     individual_action = Action::odom_move;
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-                    cmd_vel.linear.x = 15;
+                    cmd_vel.linear.x = 10;
                     cmd_vel.linear.y = 0;
                     if(odometry.y < MAP::node_y(18)){
                         badminton_process_state++;
@@ -925,7 +925,7 @@ int main(int argc, char **argv){
                     robot_state = "odom_move";
                     individual_action = Action::odom_move;
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-                    cmd_vel.linear.x = -10;
+                    cmd_vel.linear.x = -6;
                     cmd_vel.linear.y = 0;
                     //距離夠近，原地等待發射結束
                     if(dis_state == 1){
