@@ -102,6 +102,8 @@ bool badminton_ok_state = false;
 int badminton_okLast = 0;
 int sec_move_3_process = 0;
 int calibration_delay = 0;
+double bad1 = 625;
+double y_badm[4];
 
 int steal_rotate_times = 30;
 int capture_rotate_times = 0;
@@ -124,6 +126,8 @@ ros::Publisher cam_pub;
 ros::Publisher node_detect_pub;
 ros::Publisher cmd_laji_pub;
 ros::Publisher cmd_angle_pub;
+
+ros::Publisher bad_go_pub;
 //subscriber
 ros::Subscriber node_sub;
 ros::Subscriber number_sub;
@@ -143,6 +147,8 @@ std_msgs::Int32 cam_mode;
 std_msgs::Int8 cmd_laji;
 geometry_msgs::Point cmd_angle;
 geometry_msgs::Twist rotate_ang;
+
+std_msgs::Int8 bad_go;
 
 
 void nodeCallback(const std_msgs::Bool::ConstPtr& is_node){
@@ -218,7 +224,7 @@ void badminton_ok_callback(const std_msgs::Int8::ConstPtr& badminton_ok_data){
     int badminton_ok = badminton_ok_data->data;
     if(badminton_ok != badminton_okLast && badminton_ok == 1){
         badminton_ok_state = true;
-        ROS_WARN("dis_state = 1 !!!");
+        ROS_WARN_THROTTLE(5,"dis_state = 1 !!!");
     }
     badminton_okLast = badminton_ok;
 }
@@ -226,7 +232,7 @@ void badminton_ok_callback(const std_msgs::Int8::ConstPtr& badminton_ok_data){
 bool amoungDeg(double a, double b){
     if(b == PI)     return a < b && a > 0;
     if(b >= 0)  return a < b;
-    return a < b || a == PI;s
+    return a < b || a == PI;
 }
 void GetParam(ros::NodeHandle& nh){
     nh.getParam("/odom_mode",odom_mode);
@@ -244,6 +250,7 @@ void GetParam(ros::NodeHandle& nh){
     nh.getParam("/Y_shifting_dustBox",Y_shifting_dustBox);
     nh.getParam("/Y_badmiton_start_shift_right",Y_badmiton_start_shift_right);
     nh.getParam("/steal_rotate_times",steal_rotate_times);
+    nh.getParam("/bad1",bad1);
 
     if(!odom_mode){
         ROS_ERROR("^^^^^^^^^^^^^^^^^^fake_odom !!!^^^^^^^^^^^^^^^^^^");
@@ -269,6 +276,7 @@ void pubSubInit(ros::NodeHandle& nh){
     node_detect_pub = nh.advertise<std_msgs::Bool>("/node_detect", 1);
     cmd_laji_pub = nh.advertise<std_msgs::Int8>("/cmd_laji", 1);
     cmd_angle_pub = nh.advertise<geometry_msgs::Point>("/cmd_angle", 1);
+    bad_go_pub = nh.advertise<std_msgs::Int8>("/bad_go", 1);
 
     odom_sub = nh.subscribe("/realspeed",1,odomCallback);   //realspeed
     // odom_sub = nh.subscribe("/cmd_vel",1,odomCallback);     //fake odom
@@ -914,6 +922,9 @@ int main(int argc, char **argv){
                     MAP::nodeNow = 14;
                     MAP::nodeToGo = 15;
                     ODOM::oriNow = orientation.data = 3;
+                    badminton_ok_state = false;
+                    badminton_okLast = false;
+                    bad_go.data = 0;
                 }
                 if(badminton_process_state == 0){
                     robot_state = "tutorial_move";
@@ -932,18 +943,33 @@ int main(int argc, char **argv){
                     if(odometry.y < MAP::node_y(18)){
                         badminton_process_state++;
                         Process_print("start do the script_badminton");
+                        dis_state = 0;
+                        badminton_ok_state = 0;
+                        disLast = 0;
                     }
                 }
                 if(badminton_process_state == 2){
                     robot_state = "odom_move";
                     individual_action = Action::odom_move;
                     ODOM::oriNow = orientation.data = 10;  //不讓comm_vel發布
-                    cmd_vel.linear.x = -6;
+                    cmd_vel.linear.x = -4;
                     cmd_vel.linear.y = 0;
                     //距離夠近，原地等待發射結束
+
+
+                    y_badm[0] = bad1;
+                    y_badm[1] = bad1 + 20;
+                    y_badm[2] = bad1 + 40;
+                    y_badm[3] = bad1 + 60;
+                    if(ODOM::odometry.y > y_badm[num_of_badminton]){
+                        dis_state = 1;
+                    }
+
                     if(dis_state == 1){
                         robot_state = "script_badminton";
                         individual_action = Action::script_badminton;
+
+                        bad_go.data = 1;
                         //發射結束
                         if(badminton_ok_state == 1){
                             num_of_badminton++;
@@ -951,8 +977,11 @@ int main(int argc, char **argv){
                             ROS_WARN("the %dth badminton done, let go next badminton !!!",num_of_badminton);
                             dis_state = 0;
                             badminton_ok_state = 0;
+                            bad_go.data = 0;
                         }
                     }
+
+
                     //射完四顆
                     if(num_of_badminton >= 4){
                         Done_print("badminton");
@@ -1162,6 +1191,7 @@ int main(int argc, char **argv){
             case Action::script_badminton:{
                 ODOM::oriNow = orientation.data = -1;
                 orientation_pub.publish(orientation);
+                bad_go_pub.publish(bad_go);
                 break;
             }
             case Action::teleop:{

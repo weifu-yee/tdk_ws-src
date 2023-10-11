@@ -23,11 +23,13 @@ Y_badmiton_start_shift_right: 12.5
 
 steal_rotate_times: 30
 
+bad1: 625
+
 
 # constant
 span: 0.1
 # phy_maxMS: 30
-slowMS: 15
+slowMS: 12
 
 # soft
 softRate: 0.7
@@ -60,4 +62,10 @@ wkp: 1.6
 wki: 0.005
 wkd: 0.0
 
+firstNum1: 0
+firstNum2: 0
+secondNum1: 0
+secondNum2: 0
+thirdNum1: 0
+thirdNum2: 0
 
