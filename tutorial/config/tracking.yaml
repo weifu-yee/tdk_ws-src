@@ -3,7 +3,7 @@
 V: 30
 phy_maxMS: 30
 
-odom_mode: 1
+odom_mode: 0
 freq: 20
 
 start_now: 31
@@ -59,13 +59,5 @@ vkd: 0.0
 wkp: 1.6
 wki: 0.005
 wkd: 0.0
-
-
-firstNum1: 1
-firstNum2: 2
-secondNum1: 4
-secondNum2: 6
-thirdNum1: 8
-thirdNum2: 9
 
 

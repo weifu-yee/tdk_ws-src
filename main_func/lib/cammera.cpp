@@ -1,12 +1,12 @@
 #include "cammera.h"
 #include "odom.h"
 
-int firstNum1 = 1;
-int firstNum2 = 3;
-int secondNum1 = 4;
-int secondNum2 = 6;
-int thirdNum1 = 7;
-int thirdNum2 = 9;
+int firstNum1 = 0;
+int firstNum2 = 0;
+int secondNum1 = 0;
+int secondNum2 = 0;
+int thirdNum1 = 0;
+int thirdNum2 = 0;
 
 set<int> CAM::numbers;
 bool CAM::cease = 0;
@@ -16,12 +16,18 @@ void CAM::initPredictNumbers(){
     predict_numbers[1].clear();
     predict_numbers[2].clear();
     predict_numbers[3].clear();
-    predict_numbers[1].push_back(firstNum1);
-    predict_numbers[1].push_back(firstNum2);
-    predict_numbers[2].push_back(secondNum1);
-    predict_numbers[2].push_back(secondNum2);
-    predict_numbers[3].push_back(thirdNum1);
-    predict_numbers[3].push_back(thirdNum2);
+    if(firstNum1)   predict_numbers[1].push_back(firstNum1);
+    else   predict_numbers[1].push_back(1);
+    if(firstNum2)   predict_numbers[1].push_back(firstNum2);
+    else   predict_numbers[1].push_back(3);
+    if(secondNum1)   predict_numbers[2].push_back(secondNum1);
+    else   predict_numbers[2].push_back(5);
+    if(secondNum2)   predict_numbers[2].push_back(secondNum2);
+    else   predict_numbers[2].push_back(6);
+    if(thirdNum1)   predict_numbers[3].push_back(thirdNum1);
+    else   predict_numbers[3].push_back(7);
+    if(thirdNum2)   predict_numbers[3].push_back(thirdNum2);
+    else   predict_numbers[3].push_back(9);
 }
 
 void CAM::what_to_erase(int a, int b){

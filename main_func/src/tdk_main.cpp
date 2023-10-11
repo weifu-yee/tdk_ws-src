@@ -158,7 +158,7 @@ void numberCallback(const std_msgs::Int32MultiArray::ConstPtr& the_numbers){
     for(auto i:the_numbers->data){
         CAM::numbers.insert(i);
     }
-    _pub4 = -2;
+    if(_pub4 > 0)   _pub4 = -2;
 }
 void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     if(CAM::cease)  return;
@@ -167,7 +167,7 @@ void odomCallback(const geometry_msgs::Twist::ConstPtr& ins_vel){
     odometry.update(ins_vel);
     if(ins_vel->linear.z == 1)  ori6State = 1;
     if(ins_vel->linear.z == 2)  ori7State = 1;
-    ROS_INFO_THROTTLE(0.25, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
+    ROS_INFO_THROTTLE(1, "{%d -> %d}  (%.1lf, %.1lf, %.1lf) oriNow: %d faceTo: %d",MAP::nodeNow,MAP::nodeToGo,odometry.x, odometry.y, odometry.theta, orientation.data, ODOM::faceTo);
 }
 void stickCallback(const std_msgs::Bool::ConstPtr& stick_){
     stick = stick_->data;
@@ -361,7 +361,12 @@ void Done_print(string s){
     ROS_WARN("Done::_%s = true!!",s.c_str());
     ROS_ERROR("*   *   *   *   *   *   *");
 }
-
+void debug_print(int a, int b){
+    ROS_ERROR("clear & insert %d and %d",a,b);
+    for(auto i:CAM::numbers){
+        ROS_WARN("%d",i);
+    }
+}
 
 //main
 int main(int argc, char **argv){
@@ -388,7 +393,7 @@ int main(int argc, char **argv){
                 variable_reset();
                 DebugNum(nh);
                 CAM::initPredictNumbers();
-                // cout<<endl; ROS_INFO("%d,%d,%d,%d,%d,%d",firstNum1, firstNum2,secondNum1,secondNum2,thirdNum1,thirdNum2);   cout<<endl;
+                ROS_INFO("%d,%d,%d,%d,%d,%d",firstNum1, firstNum2,secondNum1,secondNum2,thirdNum1,thirdNum2);
 
 
                 robot_state = "waiting";
@@ -632,7 +637,7 @@ int main(int argc, char **argv){
                         }else{
                             CAM::what_to_erase(_a, _b);
                             ROS_ERROR("CAM::what_to_erase(%d, %d)",_a,_b);
-
+                            //刪除slow_point
                             if(!ODOM::slow_points.empty())  ODOM::slow_points.pop();
                             if(capt_ed_times == 1 || capt_ed_times == 2){
                                 int temp;
@@ -1074,6 +1079,27 @@ int main(int argc, char **argv){
                 orientation_pub.publish(orientation);
 
                 int a = 0, b = 0;
+
+                if(_pub4 == -2){
+
+                    if(capt_ed_times == 1 && firstNum1 && firstNum2){
+                        numbers.clear();
+                        numbers.insert(firstNum1);  numbers.insert(firstNum2);
+                        debug_print(firstNum1,firstNum2);
+                    }
+                    if(capt_ed_times == 2 && secondNum1 && secondNum2){
+                        numbers.clear();
+                        numbers.insert(secondNum1);  numbers.insert(secondNum2);
+                        debug_print(secondNum1,secondNum2);
+                    }
+                    if(capt_ed_times == 3 && thirdNum1 && thirdNum2){
+                        numbers.clear();
+                        numbers.insert(thirdNum1);  numbers.insert(thirdNum2);
+                        debug_print(thirdNum1,thirdNum2);
+                    }
+
+                }
+
                 for(int i = camNum_op; i <= camNum_op + 2; i++){
                     if(numbers.find(i) != numbers.end()){
                         if(!a){
@@ -1082,6 +1108,7 @@ int main(int argc, char **argv){
                         else if(!b){
                             b = i;
                             cam_flag = 1;
+                            ROS_ERROR("_pub4 = %d",_pub4);
                         }
                         else{
                             cam_flag = 0;   
@@ -1090,6 +1117,7 @@ int main(int argc, char **argv){
                     }
                 }
                 _a = a;     _b = b;
+
                 if(_pub4 == -2){
                     if(!b && a != CAM::predict_numbers[capt_ed_times][0]){
                         numbers.insert(CAM::predict_numbers[capt_ed_times][0]);
@@ -1100,6 +1128,7 @@ int main(int argc, char **argv){
                         ROS_ERROR("numbers.insert(%d);",CAM::predict_numbers[capt_ed_times][1]);
                     }
                 }
+                
                 _pub4 ++;
                 break;
             }
@@ -1173,7 +1202,7 @@ int main(int argc, char **argv){
         }
 
 
-        ROS_WARN_THROTTLE(1, "robot_state: %s",robot_state.c_str());
+        ROS_WARN_THROTTLE(3, "robot_state: %s",robot_state.c_str());
         ros::spinOnce();
         rate.sleep();
     }
