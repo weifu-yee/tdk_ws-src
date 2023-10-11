@@ -226,7 +226,7 @@ void badminton_ok_callback(const std_msgs::Int8::ConstPtr& badminton_ok_data){
 bool amoungDeg(double a, double b){
     if(b == PI)     return a < b && a > 0;
     if(b >= 0)  return a < b;
-    return a < b || a == PI;
+    return a < b || a == PI;s
 }
 void GetParam(ros::NodeHandle& nh){
     nh.getParam("/odom_mode",odom_mode);
@@ -404,7 +404,7 @@ int main(int argc, char **argv){
                 }
                 break;
             }
-            case Reset::all_run:{
+            case Reset::all_run:{         //動了順序for測試
                 if(last_reset_state != reset_state){       //初始化
                     Reset_print("all_run");
                     ODOM::oriNow = orientation.data = MAP::startPointInit(start_now, start_togo);
@@ -438,12 +438,18 @@ int main(int argc, char **argv){
                 if(Done::_first)    level_ing = Level::sec_move_1;
                 if(Done::_sec_move_1)    level_ing = Level::binBaiYa;
                 if(Done::_binBaiYa)    level_ing = Level::sec_move_2;
-                if(Done::_sec_move_2)    level_ing = Level::baseball;
-                if(Done::_baseball)    level_ing = Level::badminton;
-                if(Done::_badminton)    level_ing = Level::complete;
+
+                if(Done::_sec_move_2)    level_ing = Level::badminton;
+                if(Done::_badminton)    level_ing = Level::sec_move_3;
+                if(Done::_sec_move_3)    level_ing = Level::baseball;
+                if(Done::_baseball)    level_ing = Level::complete;
+
+                // if(Done::_sec_move_2)    level_ing = Level::baseball;
+                // if(Done::_baseball)    level_ing = Level::badminton;
+                // if(Done::_badminton)    level_ing = Level::complete;
                 break;
             }
-            case Reset::sec_all_run:{
+            case Reset::sec_all_run:{         //動了順序for測試
                 if(last_reset_state != reset_state){       //初始化
                     Reset_print("sec_all_run");
                     reset__sec_init();
@@ -452,9 +458,16 @@ int main(int argc, char **argv){
                 level_ing = Level::sec_move_1;
                 if(Done::_sec_move_1)    level_ing = Level::binBaiYa;
                 if(Done::_binBaiYa)    level_ing = Level::sec_move_2;
-                if(Done::_sec_move_2)    level_ing = Level::baseball;
-                if(Done::_baseball)    level_ing = Level::badminton;
-                if(Done::_badminton)    level_ing = Level::complete;
+
+                if(Done::_sec_move_2)    level_ing = Level::badminton;
+                if(Done::_badminton)    level_ing = Level::sec_move_3;
+                if(Done::_sec_move_3)    level_ing = Level::baseball;
+                if(Done::_baseball)    level_ing = Level::complete;
+
+
+                // if(Done::_sec_move_2)    level_ing = Level::baseball;
+                // if(Done::_baseball)    level_ing = Level::badminton;
+                // if(Done::_badminton)    level_ing = Level::complete;
                 break;
             }
             case Reset::sec_pass_binBaiYa:{         //動了順序for測試

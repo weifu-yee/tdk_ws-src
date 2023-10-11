@@ -17,7 +17,7 @@ decelerationZone: 30
 nodeLoseConpDELAY: 15
 X_after_over_hurdles: 324
 after_6_shift: 20
-Y_shifting_after_binBaiYa: 110
+Y_shifting_after_binBaiYa: 100
 Y_shifting_dustBox: 10
 Y_badmiton_start_shift_right: 12.5
 
