@@ -22,7 +22,6 @@
         <param name="baud" value="57600" />
     </node>
 
-
     
     <!-- <node name="comm_vel" pkg="tutorial" type="comm_vel" output="screen">
     </node> -->
