@@ -1055,7 +1055,7 @@ int main(int argc, char **argv){
                     // ROS_INFO("+++++++++++++++++ onNode: %d",MAP::nodeToGo);
 
                     //檢查odom是否在node一定範圍內
-                    if(MAP::check_onNode(MAP::nodeToGo) == 0){
+                    if(MAP::check_onNode(MAP::nodeToGo) == 0 && MAP::nodeNow != 31){
                         ROS_ERROR("Node misjudgment!!");
                         onNode = false;
                         continue;
