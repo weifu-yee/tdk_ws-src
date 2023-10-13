@@ -52,13 +52,13 @@ w_limit: 10000
 
 # transmission fix
 
-vkp: 5
-vki: 0.0
+vkp: 1.2
+vki: 0.001
 vkd: 0.0
 
 # rotation fix
 
-wkp: 1.6
+wkp: 0.2
 wki: 0.005
 wkd: 0.0
 

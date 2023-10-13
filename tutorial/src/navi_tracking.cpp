@@ -39,8 +39,8 @@ int allow_overshoot_times = 0;
 //tracker arguments --from Arduino
 double Err_d,Err_theta;
 int8_t std_tracker_data[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},temp[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1};
-// int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
-int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
+int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
+// int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
 
 bool ori10 = false;
 
