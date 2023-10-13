@@ -15,6 +15,7 @@
 //base arguments
 int black = 0,nonblack = 1;
 size_t i;
+int t = 0;
 double phy_maxMS = 0;
 double slowMS = 0;
 
@@ -36,11 +37,13 @@ geometry_msgs::Twist vel;
 
 int allow_overshoot_times = 0;
 
+bool current,temp;
+
 //tracker arguments --from Arduino
 double Err_d,Err_theta;
 int8_t std_tracker_data[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},temp[20] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1};
-// int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
-int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
+int8_t weight_array[20] = {5,2,0,-2,-5,-10,0,0,0,-10,-5,-2,0,2,5,10,0,0,0,10};
+// int8_t weight_array[20] = {2,1,0,-1,-2,-3,0,0,0,-3,-2,-1,0,1,2,3,0,0,0,3};
 
 bool ori10 = false;
 
@@ -117,9 +120,20 @@ void error_cal(){
     int counter_F,counter_B,total_Err_F,total_Err_B;
     double Err_F,Err_B;
     size_t i;
-    for(i = 0,PID_mode = false,stick_num = 0,  counter_F = 0,counter_B = 0,total_Err_F = 0,total_Err_B = 0; i < 20; ++i){
+    for(int j = 0,int previous = 1; j<21 ;j++){ 
+        temp = !std_tracker_data[j%20] && previous;
+        previous = std_tracker_data[j%20];
+        if(temp){
+            t++;
+        }
+        if( j == 19 && std_tracker_data[0] == black && std_tracker_data[19] == black){
+            t -=1;
+        }
+    }
+    for(i = 0 ,PID_mode = false,stick_num = 0,  counter_F = 0,counter_B = 0,total_Err_F = 0,total_Err_B = 0; i < 20; ++i){
         if(i == 2)  continue;
             if(std_tracker_data[i] == black){
+                
                 PID_mode = true;
                 stick_num++;
                 if(i <= 5 || i ==19){
@@ -266,6 +280,9 @@ int main(int argc, char** argv) {
             
             tracker.tracker_data_std();
             node_point = node_detect();
+            if(t >= 3){
+                node_point = true;
+            }
 
             if(ori_old != ori){
                 prev_ori = ori_old;
@@ -284,13 +301,13 @@ int main(int argc, char** argv) {
             double VY = V*sin(((double)ori)*0.5*pi) + u_d*cos(((double)ori)*0.5*pi);
 
 //
-            if(allow_overshoot_times++ < 20 && !PID_mode && prev_ori != -1){
-                u_d = node_overshoot_logic();
-                u_theta = 0;
-                VX = -u_d*sin(((double)ori)*0.5*pi);
-                VY = u_d*cos(((double)ori)*0.5*pi);
-                // ROS_INFO("overshoot: prev_ori = %d , ori = %d; u_d: %.3lf, VX: %.3lf, VY: %.3lf",prev_ori,ori,u_d,VX,VY);
-            }
+            // if(allow_overshoot_times++ < 20 && !PID_mode && prev_ori != -1){
+            //     u_d = node_overshoot_logic();
+            //     u_theta = 0;
+            //     VX = -u_d*sin(((double)ori)*0.5*pi);
+            //     VY = u_d*cos(((double)ori)*0.5*pi);
+            //     // ROS_INFO("overshoot: prev_ori = %d , ori = %d; u_d: %.3lf, VX: %.3lf, VY: %.3lf",prev_ori,ori,u_d,VX,VY);
+            // }
 //
 
             double W = u_theta;

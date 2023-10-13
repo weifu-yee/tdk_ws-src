@@ -1,9 +1,12 @@
 # V: 100
 # phy_maxMS: 200
 V: 30
-phy_maxMS: 30
+phy_maxMS: 44
+# phy_maxMS: 25
 
-odom_mode: 0
+odomratio: 0.8
+
+odom_mode: 1
 freq: 20
 
 start_now: 31
@@ -14,8 +17,9 @@ sec_start_togo: 13
 oriParam: 1
 tolerence: 30
 decelerationZone: 30
-nodeLoseConpDELAY: 0
-X_after_over_hurdles: 324
+nodeLoseConpDELAY: 2
+# X_after_over_hurdles: 324
+X_after_over_hurdles: 330
 after_6_shift: 20
 Y_shifting_after_binBaiYa: 100
 Y_shifting_dustBox: 10
@@ -52,14 +56,14 @@ w_limit: 10000
 
 # transmission fix
 
-vkp: 5
-vki: 0.0
+vkp: 1.2
+vki: 0.001
 vkd: 0.0
 
 # rotation fix
 
-wkp: 1.6
-wki: 0.005
+wkp: 0.2
+wki: 0.0
 wkd: 0.0
 
 firstNum1: 0

@@ -74,6 +74,8 @@ double Y_shifting_after_binBaiYa = 110;
 double Y_shifting_dustBox = 0;
 double Y_badmiton_start_shift_right = 12.5;
 
+// double odomratio = 0.9;
+
 //variables
 int the_first_first_capndet = 0;
 
@@ -253,6 +255,9 @@ void GetParam(ros::NodeHandle& nh){
     nh.getParam("/Y_badmiton_start_shift_right",Y_badmiton_start_shift_right);
     nh.getParam("/steal_rotate_times",steal_rotate_times);
     nh.getParam("/bad1",bad1);
+    nh.getParam("/odomratio",odomratio);
+
+    
 
     if(!odom_mode){
         ROS_ERROR("^^^^^^^^^^^^^^^^^^fake_odom !!!^^^^^^^^^^^^^^^^^^");
@@ -929,6 +934,7 @@ int main(int argc, char **argv){
                     badminton_ok_state = false;
                     badminton_okLast = false;
                     bad_go.data = 0;
+                    onNode = 0;
                 }
                 if(badminton_process_state == 0){
                     robot_state = "tutorial_move";

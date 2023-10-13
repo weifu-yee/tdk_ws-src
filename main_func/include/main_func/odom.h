@@ -11,6 +11,8 @@
 #define carWidth 0.23704           //m
 #define carLength 0.196          //m
 
+extern double odomratio;
+
 class Odometry{
 private:
     ros::Time current_time, last_time;

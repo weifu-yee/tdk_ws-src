@@ -1,6 +1,8 @@
 #include "odom.h"
 using namespace ODOM;
 
+double odomratio = 0.9;
+
 Odometry::Odometry(double _x, double _y, double _theta):
     x(_x), y(_y), theta(_theta/180*PI){};
 
@@ -19,8 +21,8 @@ void Odometry::update(const geometry_msgs::Twist::ConstPtr& ins_vel){
     int yMat[] = {0, 1, 0, -1};
     int i = -ODOM::faceTo + 4;   i %= 4;
     int j = -ODOM::faceTo + 5;   j %= 4;
-    x += xMat[i] * x_car + yMat[i] * y_car;
-    y += xMat[j] * x_car + yMat[j] * y_car;
+    x += xMat[i] * x_car + yMat[i] * y_car * odomratio;
+    y += xMat[j] * x_car + yMat[j] * y_car * odomratio;
 
     if(ODOM::oriNow == 4 || ODOM::oriNow == 5)
         theta += ins_vel->angular.z * (dt);
