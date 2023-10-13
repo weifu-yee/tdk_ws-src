@@ -691,6 +691,8 @@ int main(int argc, char **argv){
                     }
                     individual_action = Action::over_hurdles;
                     ODOM::odometry.x = X_after_over_hurdles;
+                    ODOM::odometry.y = MAP::node_y(MAP::nodeNow);
+
                     //跨坎補償
                     if(ori6State){
                         robot_state = "calibration";
@@ -1086,8 +1088,8 @@ int main(int argc, char **argv){
                         orientation.data);
                 }
 
-                //靠近節點時減速
-                if(ODOM::slow(MAP::nodeToGo))
+                //靠近slow_points時減速
+                if(ODOM::slow(ODOM::slow_points.top()))
                     orientation.data = (orientation.data > -5)? orientation.data - 8: orientation.data;
                     
 
@@ -1169,14 +1171,14 @@ int main(int argc, char **argv){
                 if(calibration_delay++ > 10){
                     if(after_6_shift_state == 0){
                         if(ODOM::odometry.y < MAP::node_y(MAP::nodeNow) + after_6_shift){
-                            cmd_vel.linear.y = 8;
+                            cmd_vel.linear.y = -8;
                         }else{
                             after_6_shift_state ++;
                             ROS_WARN("switch");
                         }
                     }else if(after_6_shift_state == 1){
                         if(ODOM::odometry.y > MAP::node[MAP::nodeNow].second.second - after_6_shift){
-                            cmd_vel.linear.y = -8;
+                            cmd_vel.linear.y = 8;
                         }else{
                             after_6_shift_state ++;
                             ROS_WARN("calibration_done");

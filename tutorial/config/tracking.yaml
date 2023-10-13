@@ -3,7 +3,7 @@
 V: 30
 phy_maxMS: 30
 
-odom_mode: 1
+odom_mode: 0
 freq: 20
 
 start_now: 31
@@ -14,7 +14,7 @@ sec_start_togo: 13
 oriParam: 1
 tolerence: 30
 decelerationZone: 30
-nodeLoseConpDELAY: 15
+nodeLoseConpDELAY: 0
 X_after_over_hurdles: 324
 after_6_shift: 20
 Y_shifting_after_binBaiYa: 100
@@ -32,7 +32,7 @@ span: 0.1
 slowMS: 12
 
 # soft
-softRate: 0.7
+softRate: 0.8
 
 # tracker param
 black: 0

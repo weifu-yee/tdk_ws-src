@@ -118,6 +118,7 @@ void error_cal(){
     double Err_F,Err_B;
     size_t i;
     for(i = 0,PID_mode = false,stick_num = 0,  counter_F = 0,counter_B = 0,total_Err_F = 0,total_Err_B = 0; i < 20; ++i){
+        if(i == 2)  continue;
             if(std_tracker_data[i] == black){
                 PID_mode = true;
                 stick_num++;
